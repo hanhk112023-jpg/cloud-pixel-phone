@@ -16,24 +16,24 @@ adb wait-for-device
 adb shell wm dismiss-keyguard || true
 
 # Tinh chỉnh phần cứng chuẩn Pixel 10 Pro
-adb shell wm size 1080x2400
-adb shell wm density 420
+adb shell wm size 1080x2400 || true
+adb shell wm density 420 || true
 
-# Đặt tên thiết bị và nhà sản xuất Google
-adb shell setprop ro.product.model "Pixel 10 Pro"
-adb shell setprop ro.product.brand "google"
-adb shell setprop ro.product.manufacturer "Google"
-adb shell setprop ro.product.name "cheetah"
-adb shell setprop ro.product.device "pixel10pro"
+# Đặt tên thiết bị và nhà sản xuất Google (bảo đảm an toàn không crash script)
+adb shell "setprop ro.product.model 'Pixel 10 Pro'" || true
+adb shell "setprop ro.product.brand 'google'" || true
+adb shell "setprop ro.product.manufacturer 'Google'" || true
+adb shell "setprop ro.product.name 'cheetah'" || true
+adb shell "setprop ro.product.device 'pixel10pro'" || true
 
 # Giữ màn hình luôn sáng
-adb shell settings put global stay_on_while_plugged_in 3
-adb shell settings put system screen_off_timeout 2147483647
+adb shell settings put global stay_on_while_plugged_in 3 || true
+adb shell settings put system screen_off_timeout 2147483647 || true
 
 # Tối ưu tốc độ animation cho cảm ứng mượt mà
-adb shell settings put global window_animation_scale 0.5
-adb shell settings put global transition_animation_scale 0.5
-adb shell settings put global animator_duration_scale 0.5
+adb shell settings put global window_animation_scale 0.5 || true
+adb shell settings put global transition_animation_scale 0.5 || true
+adb shell settings put global animator_duration_scale 0.5 || true
 
 # Cài đặt APK tự động nếu có truyền link
 if [ -n "$AUTO_INSTALL_APK" ]; then
@@ -50,5 +50,7 @@ if [ -n "$AUTO_INSTALL_APK" ]; then
     fi
 fi
 
+echo "============================================================"
 echo "✅ Đã cấu hình hoàn tất thiết bị ảo Google Pixel 10 Pro!"
-adb devices -l
+echo "============================================================"
+adb devices -l || true

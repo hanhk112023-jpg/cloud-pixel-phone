@@ -4,7 +4,7 @@
 # ==============================================================================
 set -euo pipefail
 
-REPO_DIR="${GITHUB_WORKSPACE:-/home/runner/work/cloud-pixel-phone/cloud-pixel-phone}"
+REPO_DIR="${GITHUB_WORKSPACE:-$(pwd)}"
 SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/null}"
 
 echo "============================================================"
