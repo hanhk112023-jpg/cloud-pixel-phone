@@ -1,0 +1,112 @@
+name: Cloud Pixel 10 Pro
+
+on:
+  workflow_dispatch:
+    inputs:
+      android_version:
+        description: 'Phiên bản Android'
+        required: true
+        default: '34'
+        type: choice
+        options:
+          - '34' # Android 14.0 (Khuyên dùng - Ổn định nhất)
+          - '33' # Android 13.0
+          - '35' # Android 15.0
+      device_model:
+        description: 'Tên dòng máy Pixel'
+        required: true
+        default: 'Google Pixel 10 Pro'
+        type: choice
+        options:
+          - 'Google Pixel 10 Pro'
+          - 'Google Pixel 9 Pro'
+          - 'Google Pixel 8 Pro'
+      duration_minutes:
+        description: 'Thời gian duy trì máy (Phút, tối đa 350)'
+        required: true
+        default: '300'
+      auto_install_apk:
+        description: 'Tự động cài đặt APK (Tùy chọn: Nhập link trực tiếp tải file .apk)'
+        required: false
+        default: ''
+
+concurrency:
+  group: cloud-pixel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  launch-phone:
+    name: 📱 Chạy Google Pixel 10 Pro Cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    env:
+      ANDROID_SDK_ROOT: /home/runner/android-sdk
+      ANDROID_AVD_HOME: /home/runner/.android/avd
+      AVD_NAME: pixel10
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+    steps:
+      - name: 📥 1/8 Tải mã nguồn dự án
+        uses: actions/checkout@v4
+
+      - name: 🔑 2/8 Kích hoạt KVM Hardware Acceleration
+        run: |
+          if [ ! -e /dev/kvm ]; then
+            echo "::error::Runner không hỗ trợ KVM phần cứng!"
+            exit 1
+          fi
+          sudo chmod 666 /dev/kvm
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm.rules > /dev/null
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm || true
+
+      - name: ☕ 3/8 Thiết lập Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 📦 4/8 Cài đặt các gói phụ trợ (Nginx, qrencode, Docker)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nginx qrencode curl unzip > /dev/null 2>&1
+          chmod +x scripts/*.sh
+
+      - name: 💾 5/8 Tối ưu Cache Android SDK & System Images
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/android-sdk
+            /home/runner/.android/avd
+          key: android-pixel10-api${{ inputs.android_version }}-v2
+          restore-keys: |
+            android-pixel10-api${{ inputs.android_version }}-
+
+      - name: 🛠️ 6/8 Tải Android SDK & Tạo máy ảo Pixel 10 Pro
+        run: |
+          bash scripts/setup-sdk.sh "${{ inputs.android_version }}"
+          bash scripts/create-avd.sh "$AVD_NAME" "${{ inputs.android_version }}"
+
+      - name: 🚀 7/8 Khởi động giả lập Pixel 10 Pro với KVM
+        run: |
+          export PATH="$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
+          bash scripts/launch-emulator.sh "$AVD_NAME"
+
+      - name: 📥 Cài đặt APK tự động (Nếu có nhập URL)
+        if: ${{ inputs.auto_install_apk != '' }}
+        run: |
+          echo "Đang tải và cài đặt APK: ${{ inputs.auto_install_apk }}"
+          curl -sL -o /tmp/custom_app.apk "${{ inputs.auto_install_apk }}"
+          adb install -r -g /tmp/custom_app.apk || true
+          rm -f /tmp/custom_app.apk
+
+      - name: 🌐 8/8 Kết nối Web Gateway & Mở Cloudflare Tunnel
+        run: |
+          export PATH="$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
+          bash scripts/tunnel.sh
+
+      - name: ⏱️ Duy trì Cloud Phone trực tuyến
+        run: |
+          export PATH="$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
+          bash scripts/keepalive.sh "${{ inputs.duration_minutes }}"

@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Setup Android SDK, Emulator & KVM Hardware Acceleration
+# ==============================================================================
+set -euo pipefail
+
+API_LEVEL="${1:-34}"
+ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-/home/runner/android-sdk}"
+
+echo "============================================================"
+echo "🚀 [1/5] Kiểm tra và cấu hình KVM Hardware Acceleration"
+echo "============================================================"
+if [ ! -e /dev/kvm ]; then
+    echo "::error::/dev/kvm không khả dụng trên runner! Cần KVM để chạy giả lập Android mượt mà."
+    exit 1
+fi
+
+sudo chmod 666 /dev/kvm
+echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm.rules > /dev/null
+sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm || true
+ls -l /dev/kvm
+echo "✅ KVM Hardware Virtualization đã kích hoạt thành công!"
+
+echo "============================================================"
+echo "📦 [2/5] Thiết lập Android Command-line Tools"
+echo "============================================================"
+mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+
+if [ ! -x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+    TMP_CT="/tmp/commandlinetools"
+    mkdir -p "$TMP_CT"
+    curl -sL -o "$TMP_CT/ct.zip" "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+    unzip -q "$TMP_CT/ct.zip" -d "$TMP_CT"
+    rm -rf "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+    mv "$TMP_CT/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+    rm -rf "$TMP_CT"
+fi
+
+export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
+
+echo "============================================================"
+echo "🔑 [3/5] Chấp thuận bản quyền Android SDK & Google APIs"
+echo "============================================================"
+yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+echo "============================================================"
+echo "📥 [4/5] Cài đặt System Image Android $API_LEVEL (Google Play Store)"
+echo "============================================================"
+IMAGE_TAG="system-images;android-${API_LEVEL};google_apis_playstore;x86_64"
+echo "Đang cài đặt gói: $IMAGE_TAG ..."
+
+sdkmanager "platform-tools" "emulator" "$IMAGE_TAG" | grep -v "=" || true
+
+echo "============================================================"
+echo "✅ [5/5] Hoàn tất thiết lập Android SDK & Platform Tools!"
+echo "============================================================"
+adb version
+emulator -version | head -2
