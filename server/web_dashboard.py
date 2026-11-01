@@ -112,6 +112,21 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
+        if path in ("/", "/index.html"):
+            html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+            if os.path.exists(html_path):
+                with open(html_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            else:
+                self._send_json({"error": "index.html not found"}, 404)
+                return
+
         if path == "/api/status":
             info = get_device_info()
             self._send_json({"success": True, "device": info})
