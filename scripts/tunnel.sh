@@ -43,9 +43,10 @@ echo "============================================================"
 echo "🔀 [3/4] Cấu hình Nginx Unified Gateway (Port 80)"
 echo "============================================================"
 
+sudo systemctl stop apache2 2>/dev/null || sudo service apache2 stop 2>/dev/null || true
 sudo cp "$REPO_DIR/scripts/nginx.conf" /etc/nginx/sites-available/default
 sudo nginx -t
-sudo systemctl restart nginx
+sudo systemctl restart nginx || sudo service nginx restart
 echo "✅ Nginx Unified Gateway đã kích hoạt thành công!"
 
 echo "============================================================"

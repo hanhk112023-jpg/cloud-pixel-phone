@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Configure Google Pixel 10 Pro System Props & Optimizations
+# ==============================================================================
+set -euo pipefail
+
+AUTO_INSTALL_APK="${1:-}"
+
+echo "============================================================"
+echo "⚡ Thiết lập thông số Google Pixel 10 Pro Flagship..."
+echo "============================================================"
+
+adb wait-for-device
+
+# Mở khóa màn hình Keyguard
+adb shell wm dismiss-keyguard || true
+
+# Tinh chỉnh phần cứng chuẩn Pixel 10 Pro
+adb shell wm size 1080x2400
+adb shell wm density 420
+
+# Đặt tên thiết bị và nhà sản xuất Google
+adb shell setprop ro.product.model "Pixel 10 Pro"
+adb shell setprop ro.product.brand "google"
+adb shell setprop ro.product.manufacturer "Google"
+adb shell setprop ro.product.name "cheetah"
+adb shell setprop ro.product.device "pixel10pro"
+
+# Giữ màn hình luôn sáng
+adb shell settings put global stay_on_while_plugged_in 3
+adb shell settings put system screen_off_timeout 2147483647
+
+# Tối ưu tốc độ animation cho cảm ứng mượt mà
+adb shell settings put global window_animation_scale 0.5
+adb shell settings put global transition_animation_scale 0.5
+adb shell settings put global animator_duration_scale 0.5
+
+# Cài đặt APK tự động nếu có truyền link
+if [ -n "$AUTO_INSTALL_APK" ]; then
+    echo "============================================================"
+    echo "📦 Tự động tải và cài đặt APK: $AUTO_INSTALL_APK"
+    echo "============================================================"
+    TMP_APK="/tmp/auto_app.apk"
+    if curl -sL -o "$TMP_APK" "$AUTO_INSTALL_APK"; then
+        adb install -r -g "$TMP_APK" || echo "Cài đặt APK gặp lỗi nhỏ nhưng tiếp tục..."
+        rm -f "$TMP_APK"
+        echo "✅ Cài đặt APK hoàn tất!"
+    else
+        echo "⚠️ Không thể tải APK từ URL đã cung cấp."
+    fi
+fi
+
+echo "✅ Đã cấu hình hoàn tất thiết bị ảo Google Pixel 10 Pro!"
+adb devices -l
