@@ -13,21 +13,23 @@ echo "============================================================"
 
 # Chạy Scrcpy Web bằng Docker image tối ưu
 docker rm -f scrcpy-web >/dev/null 2>&1 || true
-docker run -d \
+if docker run -d \
     --name scrcpy-web \
     --restart unless-stopped \
     --network host \
     --privileged \
-    shmayro/scrcpy-web:latest
-
-# Chờ scrcpy-web sẵn sàng
-for _ in $(seq 1 20); do
-    if curl -s -m 2 http://127.0.0.1:8000/ >/dev/null 2>&1; then
-        echo "✅ Scrcpy Web Service đã hoạt động!"
-        break
-    fi
-    sleep 2
-done
+    shmayro/scrcpy-web:latest; then
+    echo "Đang chờ scrcpy-web khởi động..."
+    for _ in $(seq 1 20); do
+        if curl -s -m 2 http://127.0.0.1:8000/ >/dev/null 2>&1; then
+            echo "✅ Scrcpy Web Service đã hoạt động!"
+            break
+        fi
+        sleep 2
+    done
+else
+    echo "⚠️ Docker scrcpy-web không khả dụng, sử dụng bộ truyền Canvas REST Stream tích hợp sẵn."
+fi
 
 echo "============================================================"
 echo "⚙️ [2/4] Khởi động Python ADB Control REST API (Port 5000)"

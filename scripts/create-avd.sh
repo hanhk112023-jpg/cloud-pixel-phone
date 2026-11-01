@@ -21,11 +21,15 @@ IMAGE_TAG="system-images;android-${API_LEVEL};google_apis_playstore;x86_64"
 avdmanager delete avd -n "$AVD_NAME" >/dev/null 2>&1 || true
 rm -rf "$AVD_HOME/$AVD_NAME.avd" "$AVD_HOME/$AVD_NAME.ini"
 
-# Tạo AVD với profile Pixel
-echo no | avdmanager create avd -n "$AVD_NAME" \
-    -k "$IMAGE_TAG" \
-    -d "pixel_7" \
-    --force
+# Tạo AVD với profile Pixel hoặc fallback
+if echo no | avdmanager create avd -n "$AVD_NAME" -k "$IMAGE_TAG" -d "pixel_7" --force 2>/dev/null; then
+    echo "✅ Đã tạo AVD với profile Pixel 7 cơ sở"
+elif echo no | avdmanager create avd -n "$AVD_NAME" -k "$IMAGE_TAG" -d "pixel" --force 2>/dev/null; then
+    echo "✅ Đã tạo AVD với profile Pixel cơ sở"
+else
+    echo "⚠️ Đang tạo AVD chế độ mặc định..."
+    echo no | avdmanager create avd -n "$AVD_NAME" -k "$IMAGE_TAG" --force
+fi
 
 CONFIG_FILE="$AVD_HOME/$AVD_NAME.avd/config.ini"
 

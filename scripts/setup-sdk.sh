@@ -8,7 +8,7 @@ API_LEVEL="${1:-34}"
 ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-/home/runner/android-sdk}"
 
 echo "============================================================"
-echo "🚀 [1/5] Kiểm tra và cấu hình KVM Hardware Acceleration"
+echo "🚀 [1/6] Kiểm tra và cấu hình KVM Hardware Acceleration"
 echo "============================================================"
 if [ ! -e /dev/kvm ]; then
     echo "::error::/dev/kvm không khả dụng trên runner! Cần KVM để chạy giả lập Android mượt mà."
@@ -22,7 +22,26 @@ ls -l /dev/kvm
 echo "✅ KVM Hardware Virtualization đã kích hoạt thành công!"
 
 echo "============================================================"
-echo "📦 [2/5] Thiết lập Android Command-line Tools"
+echo "📦 [2/6] Cài đặt thư viện hệ thống cần thiết (PulseAudio, GL, NSS)"
+echo "============================================================"
+sudo apt-get update -qq || true
+sudo apt-get install -y -qq \
+    libpulse0 \
+    libpulse-mainloop-glib0 \
+    libnss3 \
+    libgl1 \
+    libegl1 \
+    libvulkan1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxi6 \
+    libxtst6 \
+    libasound2t64 \
+    libasound2 > /dev/null 2>&1 || true
+echo "✅ Thư viện runtime cho Android Emulator đã được cài đặt!"
+
+echo "============================================================"
+echo "📦 [3/6] Thiết lập Android Command-line Tools"
 echo "============================================================"
 mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
 
@@ -39,12 +58,12 @@ fi
 export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
 
 echo "============================================================"
-echo "🔑 [3/5] Chấp thuận bản quyền Android SDK & Google APIs"
+echo "🔑 [4/6] Chấp thuận bản quyền Android SDK & Google APIs"
 echo "============================================================"
 yes | sdkmanager --licenses > /dev/null 2>&1 || true
 
 echo "============================================================"
-echo "📥 [4/5] Cài đặt System Image Android $API_LEVEL (Google Play Store)"
+echo "📥 [5/6] Cài đặt System Image Android $API_LEVEL (Google Play Store)"
 echo "============================================================"
 IMAGE_TAG="system-images;android-${API_LEVEL};google_apis_playstore;x86_64"
 echo "Đang cài đặt gói: $IMAGE_TAG ..."
@@ -52,7 +71,7 @@ echo "Đang cài đặt gói: $IMAGE_TAG ..."
 sdkmanager "platform-tools" "emulator" "$IMAGE_TAG" | grep -v "=" || true
 
 echo "============================================================"
-echo "✅ [5/5] Hoàn tất thiết lập Android SDK & Platform Tools!"
+echo "✅ [6/6] Hoàn tất thiết lập Android SDK & Platform Tools!"
 echo "============================================================"
 adb version
-emulator -version | head -2
+emulator -version | head -2 || true
