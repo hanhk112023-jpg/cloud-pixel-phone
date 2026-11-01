@@ -8,6 +8,7 @@ AVD_NAME="${1:-pixel10}"
 ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-/home/runner/android-sdk}"
 AVD_HOME="${ANDROID_AVD_HOME:-/home/runner/.android/avd}"
 
+export ANDROID_AVD_HOME="$AVD_HOME"
 export PATH="$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
 
 echo "============================================================"
@@ -15,7 +16,7 @@ echo "⚡ Khởi động máy ảo Pixel 10 Pro (Headless KVM Accelerator)..."
 echo "============================================================"
 
 # Xóa các file khóa lock cũ nếu có
-rm -f "$AVD_HOME/$AVD_NAME.avd/"*.lock
+rm -f "$AVD_HOME/$AVD_NAME.avd/"*.lock 2>/dev/null || true
 
 # Khởi chạy emulator ở chế độ nền (không mở cửa sổ đồ họa host, tiết kiệm RAM/CPU)
 nohup emulator -avd "$AVD_NAME" \
@@ -24,8 +25,6 @@ nohup emulator -avd "$AVD_NAME" \
     -no-boot-anim \
     -gpu swiftshader_indirect \
     -memory 3072 \
-    -camera-back virtualscene \
-    -camera-front emulated \
     -timezone Asia/Ho_Chi_Minh \
     > /tmp/emulator.log 2>&1 &
 

@@ -24,10 +24,9 @@ echo "✅ KVM Hardware Virtualization đã kích hoạt thành công!"
 echo "============================================================"
 echo "📦 [2/6] Cài đặt thư viện hệ thống cần thiết (PulseAudio, GL, NSS)"
 echo "============================================================"
-sudo apt-get update -qq || true
-sudo apt-get install -y -qq \
+sudo apt-get update -qq
+sudo apt-get install -y --no-install-recommends \
     libpulse0 \
-    libpulse-mainloop-glib0 \
     libnss3 \
     libgl1 \
     libegl1 \
@@ -35,9 +34,9 @@ sudo apt-get install -y -qq \
     libxcomposite1 \
     libxcursor1 \
     libxi6 \
-    libxtst6 \
-    libasound2t64 \
-    libasound2 > /dev/null 2>&1 || true
+    libxtst6
+
+sudo ldconfig
 echo "✅ Thư viện runtime cho Android Emulator đã được cài đặt!"
 
 echo "============================================================"
@@ -69,6 +68,13 @@ IMAGE_TAG="system-images;android-${API_LEVEL};google_apis_playstore;x86_64"
 echo "Đang cài đặt gói: $IMAGE_TAG ..."
 
 sdkmanager "platform-tools" "emulator" "$IMAGE_TAG" | grep -v "=" || true
+
+# Tạo symlink thư viện cho emulator nếu cần
+PULSE_LIB="$(find /usr/lib -name "libpulse.so.0" 2>/dev/null | head -1 || true)"
+if [ -n "$PULSE_LIB" ] && [ -d "$ANDROID_SDK_ROOT/emulator/lib64" ]; then
+    echo "Liên kết $PULSE_LIB vào $ANDROID_SDK_ROOT/emulator/lib64/"
+    ln -sf "$PULSE_LIB" "$ANDROID_SDK_ROOT/emulator/lib64/libpulse.so.0" || true
+fi
 
 echo "============================================================"
 echo "✅ [6/6] Hoàn tất thiết lập Android SDK & Platform Tools!"

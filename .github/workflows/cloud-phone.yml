@@ -70,7 +70,7 @@ jobs:
       - name: 📦 4/8 Cài đặt các gói phụ trợ & runtime giả lập
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq nginx qrencode curl unzip libpulse0 libpulse-mainloop-glib0 libnss3 libgl1 libegl1 libvulkan1 libasound2t64 libasound2 > /dev/null 2>&1 || true
+          sudo apt-get install -y -qq --no-install-recommends nginx qrencode curl unzip libpulse0 libnss3 libgl1 libegl1 libvulkan1
           chmod +x scripts/*.sh
 
       - name: 💾 5/8 Tối ưu Cache Android SDK & System Images
