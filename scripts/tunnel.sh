@@ -112,6 +112,26 @@ cat << EOF >> "$SUMMARY"
 4. Bấm các phím Home, Back, Đa nhiệm, Nút nguồn ở thanh điều khiển bên cạnh.
 EOF
 
+# Tự động cập nhật Website Homepage trên GitHub Repo & lưu vào nhánh live
+if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_REPOSITORY:-}" ]; then
+    echo "Cập nhật link trực tiếp vào trang chủ Repo GitHub..."
+    curl -s -X PATCH \
+        -H "Authorization: token ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github.v3+json" \
+        "https://api.github.com/repos/${GITHUB_REPOSITORY}" \
+        -d "{\"homepage\": \"$TUNNEL_URL\"}" > /dev/null 2>&1 || true
+
+    git config user.name "github-actions[bot]"
+    git config user.email "github-actions[bot]@users.noreply.github.com"
+    git branch -D live 2>/dev/null || true
+    git checkout --orphan live 2>/dev/null || true
+    echo "$TUNNEL_URL" > url.txt
+    git add url.txt
+    git commit -m "chore: live cloud phone at $TUNNEL_URL" || true
+    git push -f origin live || true
+    git checkout -f main || true
+fi
+
 # Gửi thông báo Telegram nếu có Secret
 if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
     MSG="📱 *Google Pixel 10 Pro Cloud Phone Đã Sẵn Sàng\!*%0A%0A🌐 *Link điều khiển Web:*%0A$TUNNEL_URL%0A%0A⚡ _Android 14 · Google Play · KVM 60FPS_"
