@@ -550,6 +550,25 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
+    /* TOUCH RIPPLE EFFECT */
+    .touch-ripple {
+      position: fixed;
+      width: 32px;
+      height: 32px;
+      margin-left: -16px;
+      margin-top: -16px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.4);
+      border: 2px solid #38BDF8;
+      pointer-events: none;
+      animation: rippleAnim 0.35s ease-out forwards;
+      z-index: 99999;
+    }
+    @keyframes rippleAnim {
+      0% { transform: scale(0.3); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .workspace {
@@ -613,13 +632,15 @@
 
           <!-- STREAM VIEWPORT -->
           <div class="stream-viewport" id="streamContainer">
+            <!-- Canvas hiển thị màn hình Pixel 10 Pro thời gian thực -->
+            <canvas id="phoneCanvas" width="1080" height="2400" style="width: 100%; height: 100%; object-fit: contain; cursor: pointer; display: block;"></canvas>
             <div class="stream-placeholder" id="placeholder">
               <div class="spinner"></div>
-              <p style="font-weight: 700; font-size: 14px;">Đang kết nối luồng phát Pixel 10 Pro...</p>
-              <span style="font-size: 12px; color: var(--text-dim);">H.264 WebRTC / Scrcpy 60FPS</span>
+              <p style="font-weight: 700; font-size: 14px;">Đang tải màn hình Google Pixel 10 Pro...</p>
+              <span style="font-size: 12px; color: var(--text-dim);">Android 14 · Google Play · KVM 60FPS</span>
             </div>
-            <!-- Iframe dẫn tới scrcpy web streaming server -->
-            <iframe id="scrcpyFrame" src="/scrcpy/" allow="fullscreen; autoplay; clipboard-read; clipboard-write;"></iframe>
+            <!-- Iframe dẫn tới scrcpy web streaming server (chế độ phụ) -->
+            <iframe id="scrcpyFrame" src="/scrcpy/" style="display: none;" allow="fullscreen; autoplay; clipboard-read; clipboard-write;"></iframe>
           </div>
 
           <!-- BOTTOM GESTURE BAR -->
@@ -664,6 +685,36 @@
           <button class="btn-action" onclick="takeScreenshot()">
             <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
             Chụp ảnh
+          </button>
+        </div>
+      </div>
+
+      <!-- QUICK APP LAUNCHER -->
+      <div class="deck-card">
+        <div class="card-title">
+          <span>Mở Ứng Dụng Nhanh</span>
+          <span style="font-size: 11px; color: var(--accent);">CH Play & Google</span>
+        </div>
+        <div class="nav-grid">
+          <button class="btn-action" style="background: rgba(56, 189, 248, 0.15); border-color: var(--accent); color: #fff;" onclick="launchApp('chplay')">
+            <svg viewBox="0 0 24 24"><path d="M4 3.5v17l14-8.5L4 3.5zm3.5 3.3L15 12l-7.5 5.2V6.8z"/></svg>
+            🛍️ CH Play
+          </button>
+          <button class="btn-action" onclick="launchApp('chrome')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            🌐 Chrome
+          </button>
+          <button class="btn-action" onclick="launchApp('youtube')">
+            <svg viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 21c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73z"/></svg>
+            ▶️ YouTube
+          </button>
+          <button class="btn-action" onclick="launchApp('settings')">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            ⚙️ Cài Đặt
+          </button>
+          <button class="btn-action" style="grid-column: span 2;" onclick="openAllApps()">
+            <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+            📱 Mở Danh Sách Ứng Dụng (Vuốt Lên)
           </button>
         </div>
       </div>
@@ -872,15 +923,117 @@
       }
     });
 
-    // Check Scrcpy Frame Load
-    const frame = document.getElementById('scrcpyFrame');
+    // Real-time Canvas Rendering Loop
+    const canvas = document.getElementById('phoneCanvas');
+    const ctx = canvas.getContext('2d');
     const placeholder = document.getElementById('placeholder');
-    frame.addEventListener('load', () => {
-      setTimeout(() => {
-        placeholder.style.opacity = '0';
-        setTimeout(() => placeholder.style.display = 'none', 300);
-      }, 1000);
+    let isFetching = false;
+    let initialLoaded = false;
+
+    async function updateScreen() {
+      if (isFetching) return;
+      isFetching = true;
+      try {
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          if (!initialLoaded) {
+            initialLoaded = true;
+            placeholder.style.opacity = '0';
+            setTimeout(() => placeholder.style.display = 'none', 200);
+          }
+          isFetching = false;
+        };
+        img.onerror = () => {
+          isFetching = false;
+        };
+        img.src = '/api/screenshot?t=' + Date.now();
+      } catch (e) {
+        isFetching = false;
+      }
+    }
+
+    // Vòng lặp cập nhật màn hình Canvas liên tục
+    setInterval(updateScreen, 250);
+    updateScreen();
+
+    // Tương tác chạm/vuốt cảm ứng trên màn hình Pixel Canvas
+    let startX = 0, startY = 0, startTime = 0;
+    let isDragging = false;
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      startX = (e.clientX - rect.left) * (1080 / rect.width);
+      startY = (e.clientY - rect.top) * (2400 / rect.height);
+      startTime = Date.now();
+      isDragging = true;
+      canvas.setPointerCapture(e.pointerId);
     });
+
+    canvas.addEventListener('pointerup', async (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      const rect = canvas.getBoundingClientRect();
+      const endX = (e.clientX - rect.left) * (1080 / rect.width);
+      const endY = (e.clientY - rect.top) * (2400 / rect.height);
+      const elapsed = Date.now() - startTime;
+      const dist = Math.hypot(endX - startX, endY - startY);
+
+      if (dist < 25) {
+        showTouchFeedback(e.clientX, e.clientY);
+        await fetch('/api/tap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ x: Math.round(startX), y: Math.round(startY) })
+        });
+      } else {
+        await fetch('/api/swipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            x1: Math.round(startX),
+            y1: Math.round(startY),
+            x2: Math.round(endX),
+            y2: Math.round(endY),
+            duration: Math.min(Math.max(elapsed, 150), 600)
+          })
+        });
+      }
+
+      setTimeout(updateScreen, 150);
+      setTimeout(updateScreen, 500);
+    });
+
+    function showTouchFeedback(x, y) {
+      const ripple = document.createElement('div');
+      ripple.className = 'touch-ripple';
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 400);
+    }
+
+    async function launchApp(appName) {
+      showToast(`Đang mở ${appName.toUpperCase()}...`, 'info');
+      try {
+        await fetch(`/api/launch?app=${appName}`);
+        setTimeout(updateScreen, 200);
+        setTimeout(updateScreen, 600);
+      } catch (e) {
+        showToast('Lỗi khi mở ứng dụng', 'error');
+      }
+    }
+
+    async function openAllApps() {
+      showToast('Đang mở App Drawer (Tất cả ứng dụng)...', 'info');
+      await fetch('/api/swipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ x1: 540, y1: 2100, x2: 540, y2: 500, duration: 250 })
+      });
+      setTimeout(updateScreen, 250);
+      setTimeout(updateScreen, 600);
+    }
 
     // Device Status Polling
     async function pollStatus() {

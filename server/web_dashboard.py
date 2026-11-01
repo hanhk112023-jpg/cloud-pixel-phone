@@ -7,9 +7,11 @@ Pixel 10 Pro Cloud Phone — Control Gateway & ADB REST API Server
 Cung cấp các API điều khiển thiết bị Android qua ADB:
   - Phím cứng (Power, Volume, Home, Back, Recents, Notifications)
   - Cảm ứng (Tap, Swipe, Drag)
+  - Mở ứng dụng nhanh (CH Play, Chrome, YouTube, Settings)
   - Nhập văn bản & Đồng bộ Clipboard
   - Cài đặt file APK (Drag & Drop)
-  - Chụp ảnh màn hình (Screenshot HD)
+  - Chụp ảnh màn hình (Screenshot HD siêu tốc từ bộ nhớ đệm)
+  - Luồng phát MJPEG trực tiếp cho Canvas Web
   - Trạng thái hệ thống (Battery, RAM, CPU, Current App)
 ================================================================================
 """
@@ -21,11 +23,36 @@ import json
 import time
 import shutil
 import subprocess
+import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 
 PORT = int(os.environ.get("API_PORT", 5000))
 ADB = os.environ.get("ADB_BIN", "adb")
+
+# Khung hình màn hình lưu trong bộ nhớ để phục vụ tức thì cho web
+LATEST_FRAME = None
+FRAME_LOCK = threading.Lock()
+FRAME_SEQ = 0
+
+def capture_worker():
+    """Luồng chạy ngầm liên tục chụp ảnh màn hình lưu vào RAM để web tải tức thì"""
+    global LATEST_FRAME, FRAME_SEQ
+    while True:
+        try:
+            p = subprocess.Popen([ADB, "exec-out", "screencap", "-p"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, _ = p.communicate(timeout=4)
+            if p.returncode == 0 and len(out) > 5000:
+                with FRAME_LOCK:
+                    LATEST_FRAME = out
+                    FRAME_SEQ += 1
+        except Exception:
+            pass
+        time.sleep(0.08)
+
+# Kích hoạt luồng cập nhật khung hình
+capture_thread = threading.Thread(target=capture_worker, daemon=True)
+capture_thread.start()
 
 def run_adb(cmd_list, timeout=15):
     """Thực thi lệnh ADB an toàn và trả về output"""
@@ -132,22 +159,73 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"success": True, "device": info})
 
         elif path == "/api/screenshot":
-            # Chụp ảnh màn hình trực tiếp bằng adb exec-out
-            try:
-                proc = subprocess.Popen([ADB, "exec-out", "screencap", "-p"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                png_bytes, err = proc.communicate(timeout=10)
-                if proc.returncode == 0 and len(png_bytes) > 1000:
-                    self.send_response(200)
-                    self.send_header("Content-Type", "image/png")
-                    self.send_header("Content-Disposition", 'inline; filename="pixel10_screenshot.png"')
-                    self.send_header("Content-Length", str(len(png_bytes)))
-                    self.send_header("Access-Control-Allow-Origin", "*")
-                    self.end_headers()
-                    self.wfile.write(png_bytes)
-                else:
-                    self._send_json({"success": False, "error": "Lỗi chụp màn hình: " + err.decode()}, status_code=500)
-            except Exception as e:
-                self._send_json({"success": False, "error": str(e)}, status_code=500)
+            # Phục vụ khung hình tức thì từ bộ nhớ đệm
+            with FRAME_LOCK:
+                data = LATEST_FRAME
+            if data:
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            else:
+                p = subprocess.Popen([ADB, "exec-out", "screencap", "-p"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out, _ = p.communicate(timeout=8)
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Content-Length", str(len(out)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(out)
+                return
+
+        elif path == "/api/stream.mjpg":
+            # Luồng phát video MJPEG trực tiếp
+            self.send_response(200)
+            self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            last_seq = -1
+            while True:
+                with FRAME_LOCK:
+                    cur_seq = FRAME_SEQ
+                    data = LATEST_FRAME
+                if cur_seq != last_seq and data:
+                    last_seq = cur_seq
+                    try:
+                        self.wfile.write(b"--frame\r\n")
+                        self.wfile.write(b"Content-Type: image/png\r\n")
+                        self.wfile.write(f"Content-Length: {len(data)}\r\n\r\n".encode())
+                        self.wfile.write(data)
+                        self.wfile.write(b"\r\n")
+                    except Exception:
+                        break
+                time.sleep(0.06)
+            return
+
+        elif path == "/api/launch":
+            query = urllib.parse.parse_qs(parsed.query)
+            app_id = query.get("app", [""])[0]
+            APP_MAP = {
+                "chplay": "com.android.vending",
+                "playstore": "com.android.vending",
+                "chrome": "com.android.chrome",
+                "youtube": "com.google.android.youtube",
+                "settings": "com.android.settings",
+                "gmail": "com.google.android.gm",
+                "maps": "com.google.android.apps.maps",
+                "photos": "com.google.android.apps.photos",
+                "files": "com.google.android.documentsui",
+                "camera": "com.android.camera2"
+            }
+            pkg = APP_MAP.get(app_id.lower(), app_id)
+            ok, out, err = run_adb(["shell", "monkey", "-p", pkg, "-c", "android.intent.category.LAUNCHER", "1"])
+            self._send_json({"success": ok, "app": app_id, "package": pkg, "error": err if not ok else None})
+            return
 
         elif path == "/api/ping":
             self._send_json({"success": True, "message": "Pixel 10 Pro Cloud Gateway Online", "time": time.time()})
@@ -160,7 +238,7 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path
         content_length = int(self.headers.get("Content-Length", 0))
 
-        if path == "/api/key":
+        if path in ("/api/key", "/api/keyevent"):
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body) if body else {}
             key_name = data.get("key", "").upper()
@@ -192,6 +270,8 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
                 ok, _, err = run_adb(["shell", "cmd", "statusbar", "expand-notifications"])
             elif key_name == "QUICK_SETTINGS":
                 ok, _, err = run_adb(["shell", "cmd", "statusbar", "expand-settings"])
+            elif key_name == "COLLAPSE":
+                ok, _, err = run_adb(["shell", "cmd", "statusbar", "collapse"])
             elif long_press:
                 ok, _, err = run_adb(["shell", "input", "keyevent", "--longpress", str(key_code)])
             else:
@@ -204,8 +284,6 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             data = json.loads(body) if body else {}
             raw_text = data.get("text", "")
             
-            # Gửi text qua adb shell input text
-            # Ký tự đặc biệt cần escape hoặc thay bằng %s cho space
             safe_text = raw_text.replace(" ", "%s").replace("&", "\\&").replace("'", "\\'").replace('"', '\\"')
             ok, _, err = run_adb(["shell", "input", "text", safe_text])
             self._send_json({"success": ok, "text": raw_text, "error": err if not ok else None})
@@ -230,10 +308,8 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"success": ok, "swipe": [x1, y1, x2, y2, duration], "error": err if not ok else None})
 
         elif path == "/api/upload":
-            # Nhận file APK tải lên và cài đặt
             content_type = self.headers.get("Content-Type", "")
             if "multipart/form-data" in content_type:
-                # Đọc dữ liệu multipart
                 boundary = content_type.split("boundary=")[-1].encode("utf-8")
                 raw_data = self.rfile.read(content_length)
                 
@@ -244,7 +320,6 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
                 for part in parts:
                     if b"Content-Disposition" in part and b'filename="' in part:
                         header_part, body_part = part.split(b"\r\n\r\n", 1)
-                        # Bỏ phần đuôi \r\n
                         apk_content = body_part.rstrip(b"\r\n")
                         m = re.search(rb'filename="([^"]+)"', header_part)
                         if m:
@@ -256,7 +331,6 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
                     with open(tmp_apk, "wb") as f:
                         f.write(apk_content)
                     
-                    # Cài đặt APK bằng adb install -r -g
                     ok, out, err = run_adb(["install", "-r", "-g", tmp_apk], timeout=120)
                     try:
                         os.remove(tmp_apk)
@@ -273,7 +347,6 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": "Yêu cầu định dạng multipart/form-data"}, status_code=400)
 
         elif path == "/api/rotate":
-            # Xoay màn hình: 0 (dọc), 1 (ngang)
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body) if body else {}
             orientation = int(data.get("orientation", 0))
