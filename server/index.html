@@ -2,30 +2,23 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Google Pixel 10 Pro — Cloud Android Phone (GitHub Actions)</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Cloud Phone — Google Pixel 10 Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090B10;
-      --panel: #121620;
-      --card: #181E2B;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg: #07090E;
+      --surface: rgba(15, 23, 42, 0.85);
+      --surface-border: rgba(255, 255, 255, 0.12);
       --accent: #38BDF8;
-      --accent-glow: rgba(56, 189, 248, 0.25);
-      --green: #22C55E;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --green: #10B981;
       --red: #EF4444;
-      --orange: #F97316;
-      --text: #F1F5F9;
+      --text: #F8FAFC;
       --text-dim: #94A3B8;
-      --phone-w: 390px;
-      --phone-h: 844px;
-      --chassis-radius: 46px;
-      --screen-radius: 38px;
+      --radius: 16px;
     }
 
     * {
@@ -33,938 +26,611 @@
       margin: 0;
       padding: 0;
       user-select: none;
-      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    body {
-      background: radial-gradient(circle at 50% 15%, #182234 0%, var(--bg) 70%);
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       color: var(--text);
-      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-      min-height: 100vh;
       display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-    }
-
-    /* HEADER */
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 28px;
-      background: rgba(18, 22, 32, 0.85);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .logo-badge {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
-      display: flex;
-      align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 16px var(--accent-glow);
-    }
-
-    .logo-badge svg {
-      width: 24px;
-      height: 24px;
-      fill: #fff;
-    }
-
-    .brand-text h1 {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-      display: flex;
       align-items: center;
-      gap: 8px;
+      touch-action: none;
     }
 
-    .brand-text h1 span {
-      background: linear-gradient(90deg, #38BDF8, #818CF8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .brand-text p {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    .header-badges {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .badge-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 10px var(--green);
-    }
-
-    /* WORKSPACE LAYOUT */
-    .workspace {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 40px;
-      padding: 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    /* SMARTPHONE CHASSIS */
-    .phone-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* PHYSICAL BUTTONS */
-    .hw-btn {
-      position: absolute;
-      background: #2D3748;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      z-index: 5;
-    }
-
-    .hw-btn:hover {
-      background: #4A5568;
-    }
-
-    .hw-btn:active {
-      transform: scale(0.92);
-      background: var(--accent);
-    }
-
-    .hw-vol-up {
-      left: -5px;
-      top: 180px;
-      width: 5px;
-      height: 60px;
-      border-radius: 3px 0 0 3px;
-    }
-
-    .hw-vol-down {
-      left: -5px;
-      top: 255px;
-      width: 5px;
-      height: 60px;
-      border-radius: 3px 0 0 3px;
-    }
-
-    .hw-power {
-      right: -5px;
-      top: 210px;
-      width: 5px;
-      height: 75px;
-      border-radius: 0 3px 3px 0;
-    }
-
-    /* PIXEL 10 PRO FRAME */
-    .pixel-chassis {
-      width: var(--phone-w);
-      height: var(--phone-h);
-      background: #0D1117;
-      border-radius: var(--chassis-radius);
-      padding: 12px;
-      box-shadow: 
-        0 0 0 2px #2A3245,
-        0 0 0 5px #151A24,
-        0 24px 60px rgba(0, 0, 0, 0.75),
-        0 0 40px rgba(56, 189, 248, 0.12);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* SCREEN BEZEL */
-    .pixel-screen {
-      flex: 1;
-      background: #000;
-      border-radius: var(--screen-radius);
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    }
-
-    /* TOP STATUS BAR & PUNCH HOLE */
-    .screen-status-bar {
-      height: 38px;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #fff;
-      z-index: 10;
-      position: relative;
-    }
-
-    .punch-hole {
-      position: absolute;
-      left: 50%;
-      top: 10px;
-      transform: translateX(-50%);
-      width: 14px;
-      height: 14px;
-      background: #000;
-      border: 1.5px solid #1A202C;
-      border-radius: 50%;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .punch-hole::after {
-      content: '';
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #111A2E;
-    }
-
-    .status-left {
-      letter-spacing: -0.2px;
-    }
-
-    .status-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* STREAM DISPLAY FRAME / CANVAS */
-    .stream-viewport {
-      flex: 1;
-      width: 100%;
-      height: 100%;
-      position: relative;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      cursor: crosshair;
-    }
-
-    .stream-viewport iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      outline: none;
-      background: #000;
-    }
-
-    .stream-placeholder {
-      position: absolute;
+    /* BACKGROUND AMBIENT GLOW */
+    .ambient-glow {
+      position: fixed;
       inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.08) 0%, rgba(7, 9, 14, 0.95) 75%);
+      z-index: 1;
+    }
+
+    /* FIXED FULLSCREEN PHONE VIEWPORT (UGPHONE STYLE) */
+    .phone-viewport {
+      position: relative;
+      height: 100vh;
+      width: calc(100vh * (1080 / 2400));
+      max-width: 100vw;
+      background: #000;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      gap: 16px;
-      background: radial-gradient(circle, #151D2A 0%, #0A0E17 100%);
+      align-items: center;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
       z-index: 2;
-      transition: opacity 0.3s;
+      overflow: hidden;
     }
 
-    .spinner {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(56, 189, 248, 0.2);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    @media (max-aspect-ratio: 1080/2400) {
+      .phone-viewport {
+        width: 100vw;
+        height: calc(100vw * (2400 / 1080));
+        max-height: 100vh;
+      }
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* BOTTOM GESTURE NAVIGATION PILL */
-    .screen-gesture-bar {
-      height: 22px;
+    /* CANVAS DISPLAY */
+    #screenCanvas {
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      display: block;
+      cursor: pointer;
       background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      cursor: pointer;
+      touch-action: none;
     }
 
-    .gesture-pill {
-      width: 96px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 999px;
-      transition: background 0.2s, transform 0.15s;
-    }
-
-    .screen-gesture-bar:hover .gesture-pill {
-      background: #fff;
-      transform: scaleY(1.3);
-    }
-
-    /* SIDEBAR CONTROL PALETTE */
-    .control-deck {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      width: 380px;
-    }
-
-    .deck-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    }
-
-    .card-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .nav-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .btn-action {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 10px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .btn-action:hover {
-      background: #232B3C;
-      border-color: rgba(56, 189, 248, 0.4);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn-action:active {
-      transform: translateY(0);
-      background: var(--accent);
-      color: #000;
-    }
-
-    .btn-action svg {
-      width: 22px;
-      height: 22px;
-      fill: currentColor;
-    }
-
-    /* APK DROP ZONE */
-    .drop-zone {
-      border: 2px dashed rgba(56, 189, 248, 0.35);
-      border-radius: 16px;
-      padding: 22px;
-      text-align: center;
-      cursor: pointer;
-      background: rgba(56, 189, 248, 0.03);
-      transition: all 0.2s;
-      position: relative;
-    }
-
-    .drop-zone:hover, .drop-zone.dragover {
-      border-color: var(--accent);
-      background: rgba(56, 189, 248, 0.08);
-      transform: scale(1.01);
-    }
-
-    .drop-zone input[type="file"] {
+    /* STATUS PILL (TINY CORNER BADGE) */
+    .status-pill {
       position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .drop-zone svg {
-      width: 32px;
-      height: 32px;
-      fill: var(--accent);
-      margin-bottom: 8px;
-    }
-
-    .drop-zone p {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .drop-zone span {
+      top: 14px;
+      right: 14px;
+      padding: 4px 10px;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
       font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    /* TEXT INPUT / CLIPBOARD */
-    .input-group {
-      display: flex;
-      gap: 8px;
-    }
-
-    .text-box {
-      flex: 1;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: #fff;
-      font-family: inherit;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .text-box:focus {
-      border-color: var(--accent);
-    }
-
-    .btn-send {
-      background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
-      border: none;
-      border-radius: 12px;
-      padding: 0 16px;
-      color: #fff;
       font-weight: 700;
-      cursor: pointer;
+      color: #38BDF8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.75;
       transition: opacity 0.2s;
     }
 
-    .btn-send:hover {
-      opacity: 0.9;
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
     }
 
-    /* DEVICE SPECS TABLE */
-    .spec-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .spec-row:last-child {
-      border-bottom: none;
-    }
-
-    .spec-label {
-      color: var(--text-dim);
-    }
-
-    .spec-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    /* TOAST */
-    .toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .toast {
-      background: #1E293B;
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--accent);
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      animation: slideIn 0.25s ease-out;
-    }
-
-    .toast.success { border-left-color: var(--green); }
-    .toast.error { border-left-color: var(--red); }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    /* TOUCH RIPPLE EFFECT */
+    /* TOUCH RIPPLE FEEDBACK */
     .touch-ripple {
       position: fixed;
-      width: 32px;
-      height: 32px;
-      margin-left: -16px;
-      margin-top: -16px;
+      width: 36px;
+      height: 36px;
+      margin-left: -18px;
+      margin-top: -18px;
       border-radius: 50%;
-      background: rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.45);
       border: 2px solid #38BDF8;
       pointer-events: none;
-      animation: rippleAnim 0.35s ease-out forwards;
-      z-index: 99999;
+      animation: rippleAnim 0.35s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+      z-index: 999999;
     }
     @keyframes rippleAnim {
       0% { transform: scale(0.3); opacity: 1; }
       100% { transform: scale(2.2); opacity: 0; }
     }
 
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-      .workspace {
-        flex-direction: column;
-      }
-      .control-deck {
-        width: 100%;
-        max-width: var(--phone-w);
-      }
+    /* =========================================================================
+       FLOATING BUBBLE (BÓNG NỔI - ASSISTIVETOUCH UGPHONE STYLE)
+       ========================================================================= */
+    .floating-bubble {
+      position: fixed;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 2px solid var(--accent);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px var(--accent-glow);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+      z-index: 99999;
+      touch-action: none;
+      transition: transform 0.15s, opacity 0.2s;
+      right: 18px;
+      top: 45%;
+    }
+
+    .floating-bubble:active {
+      cursor: grabbing;
+      transform: scale(0.92);
+    }
+
+    .floating-bubble svg {
+      width: 24px;
+      height: 24px;
+      fill: #38BDF8;
+      pointer-events: none;
+      filter: drop-shadow(0 0 4px var(--accent-glow));
+    }
+
+    /* PULSING RING */
+    .floating-bubble::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid var(--accent);
+      opacity: 0.4;
+      animation: bubblePulse 2.5s infinite;
+      pointer-events: none;
+    }
+    @keyframes bubblePulse {
+      0% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 0; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    /* FLOATING MENU MODAL */
+    .floating-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 99998;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .floating-menu-backdrop.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .floating-menu-panel {
+      position: fixed;
+      width: 320px;
+      max-width: 90vw;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+      padding: 18px;
+      z-index: 100000;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      transform: scale(0.92);
+      opacity: 0;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+
+    .floating-menu-panel.show {
+      display: flex;
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    /* MENU HEADER */
+    .menu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .menu-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .menu-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-weight: 600;
+    }
+
+    .btn-close-menu {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* GRID TOOLS */
+    .menu-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .menu-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    }
+
+    .menu-btn:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #fff;
+    }
+
+    .menu-btn:active {
+      transform: scale(0.94);
+    }
+
+    .menu-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .menu-btn.primary {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: var(--accent);
+      color: #38BDF8;
+    }
+
+    /* MODAL POPUPS (TEXT & APK) */
+    .modal-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      width: 380px;
+      max-width: 90vw;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      z-index: 100005;
+      display: none;
+      opacity: 0;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-dialog.show {
+      display: flex;
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .modal-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-dialog {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn-dialog:active {
+      transform: scale(0.96);
+    }
+
+    .btn-dialog.cancel {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+    }
+
+    .btn-dialog.submit {
+      background: var(--accent);
+      color: #07090E;
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 100010;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <div class="brand">
-      <div class="logo-badge">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
-      </div>
-      <div class="brand-text">
-        <h1>Google Pixel <span>10 Pro</span> Cloud</h1>
-        <p>Android 14 (API 34) · Google Play Services · KVM Hardware Accelerated</p>
-      </div>
+  <!-- AMBIENT GLOW -->
+  <div class="ambient-glow"></div>
+
+  <!-- FIXED FULLSCREEN PHONE VIEWPORT -->
+  <div class="phone-viewport" id="viewport">
+    <canvas id="screenCanvas" width="1080" height="2400"></canvas>
+    
+    <!-- TINY STATUS PILL -->
+    <div class="status-pill">
+      <span class="dot"></span>
+      <span id="pillFps">60 FPS · KVM</span>
     </div>
-    <div class="header-badges">
-      <div class="badge">
-        <div class="badge-dot"></div>
-        <span id="connStatus">ONLINE 60FPS</span>
+  </div>
+
+  <!-- FLOATING BUBBLE (BÓNG NỔI ASSISTIVE TOUCH) -->
+  <div class="floating-bubble" id="floatingBubble" title="Mở thanh công cụ Cloud Phone">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+    </svg>
+  </div>
+
+  <!-- FLOATING MENU BACKDROP -->
+  <div class="floating-menu-backdrop" id="menuBackdrop" onclick="closeMenu()"></div>
+
+  <!-- FLOATING MENU PANEL -->
+  <div class="floating-menu-panel" id="menuPanel">
+    <div class="menu-header">
+      <div class="menu-title">
+        <span>Pixel 10 Pro</span>
+        <span class="menu-badge">UG Style</span>
       </div>
-      <div class="badge" id="batteryBadge">
-        ⚡ 100%
-      </div>
+      <button class="btn-close-menu" onclick="closeMenu()">✕</button>
     </div>
-  </header>
 
-  <!-- MAIN WORKSPACE -->
-  <main class="workspace">
-
-    <!-- SMARTPHONE SECTION -->
-    <div class="phone-container">
-      <!-- HARDWARE BUTTONS -->
-      <div class="hw-btn hw-vol-up" title="Tăng âm lượng" onclick="sendKey('VOLUME_UP')"></div>
-      <div class="hw-btn hw-vol-down" title="Giảm âm lượng" onclick="sendKey('VOLUME_DOWN')"></div>
-      <div class="hw-btn hw-power" title="Nút Nguồn / Khóa màn hình" onclick="sendKey('POWER')"></div>
-
-      <!-- CHASSIS -->
-      <div class="pixel-chassis" id="pixelPhone">
-        <div class="pixel-screen">
-          
-          <!-- TOP STATUS BAR -->
-          <div class="screen-status-bar">
-            <span class="status-left" id="liveClock">12:00</span>
-            <div class="punch-hole" title="Selfie Camera 50MP"></div>
-            <div class="status-right">
-              <span>5G</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.25c-.2.2-.2.51 0 .71.2.2.51.2.71 0l1.35-1.35C8.01 19.34 9.93 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
-              <span>100%</span>
-            </div>
-          </div>
-
-          <!-- STREAM VIEWPORT -->
-          <div class="stream-viewport" id="streamContainer">
-            <!-- Canvas hiển thị màn hình Pixel 10 Pro thời gian thực -->
-            <canvas id="phoneCanvas" width="1080" height="2400" style="width: 100%; height: 100%; object-fit: contain; cursor: pointer; display: block;"></canvas>
-            <div class="stream-placeholder" id="placeholder">
-              <div class="spinner"></div>
-              <p style="font-weight: 700; font-size: 14px;">Đang tải màn hình Google Pixel 10 Pro...</p>
-              <span style="font-size: 12px; color: var(--text-dim);">Android 14 · Google Play · KVM 60FPS</span>
-            </div>
-            <!-- Iframe dẫn tới scrcpy web streaming server (chế độ phụ) -->
-            <iframe id="scrcpyFrame" src="/scrcpy/" style="display: none;" allow="fullscreen; autoplay; clipboard-read; clipboard-write;"></iframe>
-          </div>
-
-          <!-- BOTTOM GESTURE BAR -->
-          <div class="screen-gesture-bar" onclick="sendKey('HOME')">
-            <div class="gesture-pill"></div>
-          </div>
-
-        </div>
+    <!-- CORE NAVIGATION -->
+    <div>
+      <div class="menu-section-title">Phím Điều Hướng Cốt Lõi</div>
+      <div class="menu-grid">
+        <button class="menu-btn primary" onclick="execKey('BACK')">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Quay lại
+        </button>
+        <button class="menu-btn primary" onclick="execKey('HOME')">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
+        </button>
+        <button class="menu-btn primary" onclick="execKey('RECENTS')">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+          Đa nhiệm
+        </button>
+        <button class="menu-btn" onclick="execKey('NOTIFICATIONS')">
+          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          Thông báo
+        </button>
       </div>
     </div>
 
-    <!-- CONTROL SIDEBAR -->
-    <div class="control-deck">
-
-      <!-- QUICK NAVIGATION BUTTONS -->
-      <div class="deck-card">
-        <div class="card-title">
-          <span>Phím Điều Hướng Android</span>
-          <span style="font-size: 11px; color: var(--accent);">Touch & Keys</span>
-        </div>
-        <div class="nav-grid">
-          <button class="btn-action" onclick="sendKey('BACK')">
-            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            Quay lại
-          </button>
-          <button class="btn-action" onclick="sendKey('HOME')">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            Màn hình chính
-          </button>
-          <button class="btn-action" onclick="sendKey('RECENTS')">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
-            Đa nhiệm
-          </button>
-          <button class="btn-action" onclick="sendKey('NOTIFICATIONS')">
-            <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-            Thông báo
-          </button>
-          <button class="btn-action" onclick="sendKey('QUICK_SETTINGS')">
-            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-            Cài đặt nhanh
-          </button>
-          <button class="btn-action" onclick="takeScreenshot()">
-            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-            Chụp ảnh
-          </button>
-        </div>
+    <!-- FAST APPS & ACTIONS -->
+    <div>
+      <div class="menu-section-title">Ứng Dụng & Cài Đặt</div>
+      <div class="menu-grid">
+        <button class="menu-btn" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34D399;" onclick="execLaunch('chplay')">
+          <svg viewBox="0 0 24 24"><path d="M4 3.5v17l14-8.5L4 3.5zm3.5 3.3L15 12l-7.5 5.2V6.8z"/></svg>
+          CH Play
+        </button>
+        <button class="menu-btn" onclick="execLaunch('chrome')">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          Chrome
+        </button>
+        <button class="menu-btn" onclick="execLaunch('youtube')">
+          <svg viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 21c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73z"/></svg>
+          YouTube
+        </button>
+        <button class="menu-btn" onclick="execLaunch('settings')">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          Cài đặt
+        </button>
       </div>
+    </div>
 
-      <!-- QUICK APP LAUNCHER -->
-      <div class="deck-card">
-        <div class="card-title">
-          <span>Mở Ứng Dụng Nhanh</span>
-          <span style="font-size: 11px; color: var(--accent);">CH Play & Google</span>
-        </div>
-        <div class="nav-grid">
-          <button class="btn-action" style="background: rgba(56, 189, 248, 0.15); border-color: var(--accent); color: #fff;" onclick="launchApp('chplay')">
-            <svg viewBox="0 0 24 24"><path d="M4 3.5v17l14-8.5L4 3.5zm3.5 3.3L15 12l-7.5 5.2V6.8z"/></svg>
-            🛍️ CH Play
-          </button>
-          <button class="btn-action" onclick="launchApp('chrome')">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-            🌐 Chrome
-          </button>
-          <button class="btn-action" onclick="launchApp('youtube')">
-            <svg viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 21c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73z"/></svg>
-            ▶️ YouTube
-          </button>
-          <button class="btn-action" onclick="launchApp('settings')">
-            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-            ⚙️ Cài Đặt
-          </button>
-          <button class="btn-action" style="grid-column: span 2;" onclick="openAllApps()">
-            <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-            📱 Mở Danh Sách Ứng Dụng (Vuốt Lên)
-          </button>
-        </div>
-      </div>
-
-      <!-- APK INSTALLER DROP ZONE -->
-      <div class="deck-card">
-        <div class="card-title">
-          <span>Cài Đặt Ứng Dụng (APK)</span>
-          <span style="font-size: 11px; color: var(--green);">Kéo thả trực tiếp</span>
-        </div>
-        <div class="drop-zone" id="dropZone">
-          <input type="file" id="apkInput" accept=".apk" onchange="uploadApk(this.files[0])">
+    <!-- PRO TOOLS -->
+    <div>
+      <div class="menu-section-title">Công Cụ Tiện Ích</div>
+      <div class="menu-grid">
+        <button class="menu-btn" onclick="openTextDialog()">
+          <svg viewBox="0 0 24 24"><path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/></svg>
+          Gửi Chữ
+        </button>
+        <button class="menu-btn" onclick="openApkDialog()">
           <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-          <p id="dropText">Thả file .APK vào đây để cài đặt</p>
-          <span>hoặc click để chọn file từ máy tính</span>
-        </div>
+          Cài APK
+        </button>
+        <button class="menu-btn" onclick="downloadScreenshot()">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          Chụp HD
+        </button>
+        <button class="menu-btn" onclick="execKey('POWER')">
+          <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.59 1.23-4.9 3.14-6.38L5.72 4.2C3.43 6.01 2 8.84 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-3.16-1.43-5.99-3.72-7.83h-.45z"/></svg>
+          Nguồn
+        </button>
       </div>
-
-      <!-- TEXT / CLIPBOARD INPUT -->
-      <div class="deck-card">
-        <div class="card-title">
-          <span>Gửi Chữ Vào Điện Thoại</span>
-          <span style="font-size: 11px; color: var(--accent);">Clipboard</span>
-        </div>
-        <div class="input-group">
-          <input type="text" id="phoneTextInput" class="text-box" placeholder="Nhập văn bản, link web..." onkeydown="if(event.key==='Enter') sendText()">
-          <button class="btn-send" onclick="sendText()">Gửi</button>
-        </div>
-      </div>
-
-      <!-- DEVICE SPECS -->
-      <div class="deck-card">
-        <div class="card-title">
-          <span>Thông Số Kỹ Thuật Máy</span>
-          <span style="font-size: 11px; color: var(--green);">KVM Active</span>
-        </div>
-        <div class="spec-row">
-          <span class="spec-label">Thiết bị:</span>
-          <span class="spec-val" id="specModel">Google Pixel 10 Pro</span>
-        </div>
-        <div class="spec-row">
-          <span class="spec-label">Hệ điều hành:</span>
-          <span class="spec-val" id="specAndroid">Android 14 (API 34)</span>
-        </div>
-        <div class="spec-row">
-          <span class="spec-label">Vi xử lý & RAM:</span>
-          <span class="spec-val">Google Tensor G5 · 16 GB</span>
-        </div>
-        <div class="spec-row">
-          <span class="spec-label">Màn hình:</span>
-          <span class="spec-val">1080 x 2400 · 420 dpi (60Hz)</span>
-        </div>
-        <div class="spec-row">
-          <span class="spec-label">Dịch vụ Google:</span>
-          <span class="spec-val" style="color: var(--green);">CH Play & Google APIs ✓</span>
-        </div>
-      </div>
-
     </div>
+  </div>
 
-  </main>
+  <!-- TEXT INPUT MODAL -->
+  <div class="modal-dialog" id="textDialog">
+    <div class="modal-header">
+      <div class="modal-title">⌨️ Gửi Văn Bản Vào Điện Thoại</div>
+      <button class="btn-close-menu" onclick="closeDialog('textDialog')">✕</button>
+    </div>
+    <input type="text" id="phoneTextInput" class="modal-input" placeholder="Nhập chữ, link tải hoặc văn bản..." onkeydown="if(event.key==='Enter') submitText()">
+    <div class="modal-actions">
+      <button class="btn-dialog cancel" onclick="closeDialog('textDialog')">Hủy</button>
+      <button class="btn-dialog submit" onclick="submitText()">Gửi Ngay</button>
+    </div>
+  </div>
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div class="toast-container" id="toasts"></div>
+  <!-- APK INSTALL MODAL -->
+  <div class="modal-dialog" id="apkDialog">
+    <div class="modal-header">
+      <div class="modal-title">📦 Cài Đặt File APK</div>
+      <button class="btn-close-menu" onclick="closeDialog('apkDialog')">✕</button>
+    </div>
+    <p style="font-size: 12px; color: var(--text-dim);">Chọn file .apk từ máy tính để tự động cài đặt qua ADB:</p>
+    <input type="file" id="apkFileInput" accept=".apk" style="display: none;" onchange="uploadApkFile(this.files[0])">
+    <button class="btn-dialog submit" style="width: 100%; padding: 14px; text-align: center;" onclick="document.getElementById('apkFileInput').click()">
+      📁 Chọn file .APK từ máy tính
+    </button>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
 
   <script>
-    // Live Clock in Status Bar
-    function updateClock() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('liveClock').textContent = `${h}:${m}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // Toast message helper
-    function showToast(msg, type = 'info') {
-      const container = document.getElementById('toasts');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = msg;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    // Send Key Event via ADB API
-    async function sendKey(keyName) {
-      try {
-        const resp = await fetch('/api/key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: keyName })
-        });
-        const data = await resp.json();
-        if (data.success) {
-          showToast(`Đã bấm phím ${keyName}`, 'success');
-        } else {
-          showToast(`Lỗi bấm phím: ${data.error}`, 'error');
-        }
-      } catch (err) {
-        showToast(`Lỗi kết nối API: ${err.message}`, 'error');
-      }
-    }
-
-    // Send Text via ADB input text
-    async function sendText() {
-      const input = document.getElementById('phoneTextInput');
-      const text = input.value.trim();
-      if (!text) return;
-      try {
-        const resp = await fetch('/api/text', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: text })
-        });
-        const data = await resp.json();
-        if (data.success) {
-          showToast(`Đã gửi văn bản vào máy!`, 'success');
-          input.value = '';
-        } else {
-          showToast(`Lỗi gửi: ${data.error}`, 'error');
-        }
-      } catch (err) {
-        showToast(`Lỗi kết nối: ${err.message}`, 'error');
-      }
-    }
-
-    // Take HD Screenshot
-    async function takeScreenshot() {
-      showToast('Đang chụp ảnh màn hình Pixel 10...', 'info');
-      try {
-        const resp = await fetch('/api/screenshot');
-        if (resp.ok) {
-          const blob = await resp.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `pixel10_screenshot_${Date.now()}.png`;
-          a.click();
-          URL.revokeObjectURL(url);
-          showToast('Đã tải ảnh chụp màn hình về máy!', 'success');
-        } else {
-          showToast('Lỗi khi chụp màn hình', 'error');
-        }
-      } catch (err) {
-        showToast(`Lỗi: ${err.message}`, 'error');
-      }
-    }
-
-    // Upload & Install APK
-    async function uploadApk(file) {
-      if (!file || !file.name.endsWith('.apk')) {
-        showToast('Vui lòng chọn file định dạng .apk hợp lệ', 'error');
-        return;
-      }
-      const dropText = document.getElementById('dropText');
-      dropText.textContent = `Đang tải lên & cài đặt: ${file.name}...`;
-      showToast(`Đang cài đặt ${file.name} vào Pixel 10...`, 'info');
-
-      const formData = new FormData();
-      formData.append('apk', file);
-
-      try {
-        const resp = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await resp.json();
-        if (data.success) {
-          showToast(`Cài đặt thành công ứng dụng ${file.name}!`, 'success');
-          dropText.textContent = 'Cài đặt hoàn tất! Thả file khác để cài tiếp.';
-        } else {
-          showToast(`Lỗi cài đặt: ${data.error}`, 'error');
-          dropText.textContent = 'Lỗi cài đặt. Thử lại.';
-        }
-      } catch (err) {
-        showToast(`Lỗi kết nối: ${err.message}`, 'error');
-        dropText.textContent = 'Thả file .APK vào đây để cài đặt';
-      }
-    }
-
-    // Drag and Drop APK handling
-    const dropZone = document.getElementById('dropZone');
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, e => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-      });
-    });
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, e => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-      });
-    });
-    dropZone.addEventListener('drop', e => {
-      const dt = e.dataTransfer;
-      const files = dt.files;
-      if (files.length > 0) {
-        uploadApk(files[0]);
-      }
-    });
-
-    // Real-time Canvas Rendering Loop
-    const canvas = document.getElementById('phoneCanvas');
+    // =========================================================================
+    // CANVAS DOUBLE-BUFFER STREAMING (ZERO REBOOT / ZERO FLICKER ON RELOAD)
+    // =========================================================================
+    const canvas = document.getElementById('screenCanvas');
     const ctx = canvas.getContext('2d');
-    const placeholder = document.getElementById('placeholder');
     let isFetching = false;
-    let initialLoaded = false;
+    let frameCount = 0;
+    let lastFpsTime = Date.now();
 
-    async function updateScreen() {
+    // Tải khung hình liên tục bằng kỹ thuật double-buffering
+    function fetchNextFrame() {
       if (isFetching) return;
       isFetching = true;
-      try {
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          if (!initialLoaded) {
-            initialLoaded = true;
-            placeholder.style.opacity = '0';
-            setTimeout(() => placeholder.style.display = 'none', 200);
-          }
-          isFetching = false;
-        };
-        img.onerror = () => {
-          isFetching = false;
-        };
-        img.src = '/api/screenshot?t=' + Date.now();
-      } catch (e) {
+
+      const img = new Image();
+      img.onload = () => {
+        // Chỉ vẽ khi toàn bộ ảnh đã nạp xong vào bộ nhớ -> Triệt tiêu 100% hiện tượng chớp/đen màn hình
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         isFetching = false;
-      }
+
+        frameCount++;
+        const now = Date.now();
+        if (now - lastFpsTime >= 2000) {
+          const fps = Math.round((frameCount * 1000) / (now - lastFpsTime));
+          document.getElementById('pillFps').textContent = `${fps} FPS · KVM`;
+          frameCount = 0;
+          lastFpsTime = now;
+        }
+      };
+      img.onerror = () => {
+        isFetching = false;
+      };
+      // Gọi ảnh JPEG siêu nhẹ (~30 KB)
+      img.src = '/api/screenshot?t=' + Date.now();
     }
 
-    // Vòng lặp cập nhật màn hình Canvas liên tục
-    setInterval(updateScreen, 250);
-    updateScreen();
+    // Vòng lặp tải khung hình tốc độ cao
+    setInterval(fetchNextFrame, 150);
+    fetchNextFrame();
 
-    // Tương tác chạm/vuốt cảm ứng trên màn hình Pixel Canvas
+    // =========================================================================
+    // TOUCH & GESTURE MAPPING (FULLSCREEN 1080x2400)
+    // =========================================================================
     let startX = 0, startY = 0, startTime = 0;
     let isDragging = false;
 
     canvas.addEventListener('pointerdown', (e) => {
       const rect = canvas.getBoundingClientRect();
-      startX = (e.clientX - rect.left) * (1080 / rect.width);
-      startY = (e.clientY - rect.top) * (2400 / rect.height);
+      startX = Math.max(0, Math.min(1080, Math.round((e.clientX - rect.left) * (1080 / rect.width))));
+      startY = Math.max(0, Math.min(2400, Math.round((e.clientY - rect.top) * (2400 / rect.height))));
       startTime = Date.now();
       isDragging = true;
       canvas.setPointerCapture(e.pointerId);
@@ -974,34 +640,34 @@
       if (!isDragging) return;
       isDragging = false;
       const rect = canvas.getBoundingClientRect();
-      const endX = (e.clientX - rect.left) * (1080 / rect.width);
-      const endY = (e.clientY - rect.top) * (2400 / rect.height);
+      const endX = Math.max(0, Math.min(1080, Math.round((e.clientX - rect.left) * (1080 / rect.width))));
+      const endY = Math.max(0, Math.min(2400, Math.round((e.clientY - rect.top) * (2400 / rect.height))));
       const elapsed = Date.now() - startTime;
       const dist = Math.hypot(endX - startX, endY - startY);
 
-      if (dist < 25) {
+      if (dist < 20) {
         showTouchFeedback(e.clientX, e.clientY);
         await fetch('/api/tap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ x: Math.round(startX), y: Math.round(startY) })
+          body: JSON.stringify({ x: startX, y: startY })
         });
       } else {
         await fetch('/api/swipe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            x1: Math.round(startX),
-            y1: Math.round(startY),
-            x2: Math.round(endX),
-            y2: Math.round(endY),
-            duration: Math.min(Math.max(elapsed, 150), 600)
+            x1: startX,
+            y1: startY,
+            x2: endX,
+            y2: endY,
+            duration: Math.min(Math.max(elapsed, 120), 500)
           })
         });
       }
 
-      setTimeout(updateScreen, 150);
-      setTimeout(updateScreen, 500);
+      setTimeout(fetchNextFrame, 100);
+      setTimeout(fetchNextFrame, 350);
     });
 
     function showTouchFeedback(x, y) {
@@ -1010,47 +676,196 @@
       ripple.style.left = `${x}px`;
       ripple.style.top = `${y}px`;
       document.body.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 400);
+      setTimeout(() => ripple.remove(), 350);
     }
 
-    async function launchApp(appName) {
-      showToast(`Đang mở ${appName.toUpperCase()}...`, 'info');
-      try {
-        await fetch(`/api/launch?app=${appName}`);
-        setTimeout(updateScreen, 200);
-        setTimeout(updateScreen, 600);
-      } catch (e) {
-        showToast('Lỗi khi mở ứng dụng', 'error');
+    // =========================================================================
+    // FLOATING BUBBLE DRAG & POPUP LOGIC (UGPHONE STYLE)
+    // =========================================================================
+    const bubble = document.getElementById('floatingBubble');
+    const menuPanel = document.getElementById('menuPanel');
+    const menuBackdrop = document.getElementById('menuBackdrop');
+    let isBubbleDragging = false;
+    let bubbleMoved = false;
+    let bStartX, bStartY, initialX, initialY;
+
+    bubble.addEventListener('pointerdown', (e) => {
+      isBubbleDragging = true;
+      bubbleMoved = false;
+      bStartX = e.clientX;
+      bStartY = e.clientY;
+      const rect = bubble.getBoundingClientRect();
+      initialX = rect.left;
+      initialY = rect.top;
+      bubble.setPointerCapture(e.pointerId);
+    });
+
+    bubble.addEventListener('pointermove', (e) => {
+      if (!isBubbleDragging) return;
+      const dx = e.clientX - bStartX;
+      const dy = e.clientY - bStartY;
+      if (Math.hypot(dx, dy) > 6) {
+        bubbleMoved = true;
+        bubble.style.right = 'auto';
+        bubble.style.left = `${Math.max(10, Math.min(window.innerWidth - 58, initialX + dx))}px`;
+        bubble.style.top = `${Math.max(10, Math.min(window.innerHeight - 58, initialY + dy))}px`;
+      }
+    });
+
+    bubble.addEventListener('pointerup', (e) => {
+      if (!isBubbleDragging) return;
+      isBubbleDragging = false;
+      if (!bubbleMoved) {
+        toggleMenu();
+      }
+    });
+
+    function toggleMenu() {
+      if (menuPanel.classList.contains('show')) {
+        closeMenu();
+      } else {
+        openMenu();
       }
     }
 
-    async function openAllApps() {
-      showToast('Đang mở App Drawer (Tất cả ứng dụng)...', 'info');
-      await fetch('/api/swipe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ x1: 540, y1: 2100, x2: 540, y2: 500, duration: 250 })
-      });
-      setTimeout(updateScreen, 250);
-      setTimeout(updateScreen, 600);
+    function openMenu() {
+      // Định vị menu ngay cạnh bóng nổi
+      const bRect = bubble.getBoundingClientRect();
+      const menuWidth = 320;
+      let left = bRect.left - menuWidth - 12;
+      if (left < 10) {
+        left = bRect.right + 12;
+      }
+      if (left + menuWidth > window.innerWidth - 10) {
+        left = Math.max(10, window.innerWidth / 2 - menuWidth / 2);
+      }
+      let top = Math.max(20, Math.min(window.innerHeight - 380, bRect.top - 60));
+
+      menuPanel.style.left = `${left}px`;
+      menuPanel.style.top = `${top}px`;
+      menuPanel.classList.add('show');
+      menuBackdrop.classList.add('show');
     }
 
-    // Device Status Polling
-    async function pollStatus() {
-      try {
-        const resp = await fetch('/api/status');
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.device) {
-            document.getElementById('specModel').textContent = data.device.model || 'Google Pixel 10 Pro';
-            document.getElementById('specAndroid').textContent = `Android ${data.device.android_version} (API ${data.device.api_level})`;
-            document.getElementById('batteryBadge').textContent = `⚡ ${data.device.battery}`;
-          }
-        }
-      } catch (e) {}
+    function closeMenu() {
+      menuPanel.classList.remove('show');
+      menuBackdrop.classList.remove('show');
     }
-    setInterval(pollStatus, 15000);
-    pollStatus();
+
+    // =========================================================================
+    // API SHORTCUT ACTIONS
+    // =========================================================================
+    async function execKey(keyName) {
+      closeMenu();
+      showToast(`Đã bấm ${keyName}`);
+      await fetch('/api/key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: keyName })
+      });
+      setTimeout(fetchNextFrame, 150);
+      setTimeout(fetchNextFrame, 400);
+    }
+
+    async function execLaunch(appName) {
+      closeMenu();
+      showToast(`Đang mở ${appName.toUpperCase()}...`);
+      await fetch(`/api/launch?app=${appName}`);
+      setTimeout(fetchNextFrame, 250);
+      setTimeout(fetchNextFrame, 700);
+    }
+
+    // TEXT MODAL
+    function openTextDialog() {
+      closeMenu();
+      document.getElementById('textDialog').classList.add('show');
+      menuBackdrop.classList.add('show');
+      setTimeout(() => document.getElementById('phoneTextInput').focus(), 100);
+    }
+
+    async function submitText() {
+      const input = document.getElementById('phoneTextInput');
+      const text = input.value.trim();
+      if (!text) return;
+      closeDialog('textDialog');
+      showToast(`Đã gửi: "${text}"`);
+      await fetch('/api/text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      });
+      input.value = '';
+      setTimeout(fetchNextFrame, 200);
+    }
+
+    // APK MODAL
+    function openApkDialog() {
+      closeMenu();
+      document.getElementById('apkDialog').classList.add('show');
+      menuBackdrop.classList.add('show');
+    }
+
+    async function uploadApkFile(file) {
+      if (!file || !file.name.endsWith('.apk')) {
+        showToast('Vui lòng chọn file .apk hợp lệ');
+        return;
+      }
+      closeDialog('apkDialog');
+      showToast(`Đang cài đặt ${file.name}...`);
+
+      const formData = new FormData();
+      formData.append('apk', file);
+      try {
+        const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.success) {
+          showToast(`Cài đặt thành công ${file.name}!`);
+        } else {
+          showToast(`Lỗi cài: ${data.error}`);
+        }
+      } catch (err) {
+        showToast(`Lỗi kết nối: ${err.message}`);
+      }
+      setTimeout(fetchNextFrame, 600);
+    }
+
+    function closeDialog(id) {
+      document.getElementById(id).classList.remove('show');
+      menuBackdrop.classList.remove('show');
+    }
+
+    // HD SCREENSHOT
+    async function downloadScreenshot() {
+      closeMenu();
+      showToast('Đang tải ảnh chụp màn hình HD...');
+      const resp = await fetch('/api/screenshot?hd=1');
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pixel10_screenshot_${Date.now()}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // TOAST HELPER
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // DRAG AND DROP APK TRỰC TIẾP LÊN MÀN HÌNH
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        uploadApkFile(e.dataTransfer.files[0]);
+      }
+    });
   </script>
 </body>
 </html>

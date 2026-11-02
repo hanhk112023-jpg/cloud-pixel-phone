@@ -79,7 +79,8 @@ jobs:
             libnss3 \
             libgl1 \
             libegl1 \
-            libvulkan1
+            libvulkan1 \
+            python3-pil
           sudo curl -fsSL -o /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
           sudo chmod +x /usr/local/bin/cloudflared
           chmod +x scripts/*.sh server/*.py

@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-Pixel 10 Pro Cloud Phone — Control Gateway & ADB REST API Server
+Pixel 10 Pro Cloud Phone — Control Gateway & High-Speed Stream Server
 ================================================================================
-Cung cấp các API điều khiển thiết bị Android qua ADB:
+Cung cấp các API điều khiển thiết bị Android qua ADB và nén ảnh JPEG siêu tốc:
   - Phím cứng (Power, Volume, Home, Back, Recents, Notifications)
   - Cảm ứng (Tap, Swipe, Drag)
   - Mở ứng dụng nhanh (CH Play, Chrome, YouTube, Settings)
   - Nhập văn bản & Đồng bộ Clipboard
   - Cài đặt file APK (Drag & Drop)
-  - Chụp ảnh màn hình (Screenshot HD siêu tốc từ bộ nhớ đệm)
-  - Luồng phát MJPEG trực tiếp cho Canvas Web
+  - Chụp ảnh màn hình (JPEG siêu nhẹ cho Stream Web, PNG HD cho Tải về)
+  - Luồng phát MJPEG trực tiếp
   - Trạng thái hệ thống (Battery, RAM, CPU, Current App)
 ================================================================================
 """
@@ -21,47 +21,70 @@ import sys
 import re
 import json
 import time
+import io
 import shutil
 import subprocess
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 
+# Kiểm tra thư viện nén ảnh PIL (Pillow)
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+
 PORT = int(os.environ.get("API_PORT", 5000))
 ADB = os.environ.get("ADB_BIN", "adb")
 
 # Khung hình màn hình lưu trong bộ nhớ để phục vụ tức thì cho web
-LATEST_FRAME = None
+LATEST_PNG = None
+LATEST_JPEG = None
 FRAME_LOCK = threading.Lock()
 FRAME_SEQ = 0
 
 def capture_worker():
-    """Luồng chạy ngầm liên tục chụp ảnh màn hình lưu vào RAM để web tải tức thì"""
-    global LATEST_FRAME, FRAME_SEQ
+    """Luồng ngầm liên tục chụp màn hình và nén JPEG tức thì để web tải mượt mà không chớp"""
+    global LATEST_PNG, LATEST_JPEG, FRAME_SEQ
     while True:
         try:
             p = subprocess.Popen([ADB, "exec-out", "screencap", "-p"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, _ = p.communicate(timeout=4)
+            out, _ = p.communicate(timeout=3)
             if p.returncode == 0 and len(out) > 5000:
+                jpeg_bytes = None
+                if HAS_PIL:
+                    try:
+                        img = Image.open(io.BytesIO(out))
+                        # Giảm nhẹ độ phân giải xuống 720x1600 để tối ưu tốc độ truyền qua web (chỉ 25-35 KB)
+                        img_res = img.resize((720, 1600), Image.Resampling.BILINEAR)
+                        buf = io.BytesIO()
+                        img_res.save(buf, format="JPEG", quality=75, optimize=True)
+                        jpeg_bytes = buf.getvalue()
+                    except Exception:
+                        jpeg_bytes = None
+
                 with FRAME_LOCK:
-                    LATEST_FRAME = out
+                    LATEST_PNG = out
+                    if jpeg_bytes:
+                        LATEST_JPEG = jpeg_bytes
                     FRAME_SEQ += 1
         except Exception:
             pass
-        time.sleep(0.08)
+        time.sleep(0.06)
 
 # Kích hoạt luồng cập nhật khung hình
 capture_thread = threading.Thread(target=capture_worker, daemon=True)
 capture_thread.start()
 
-def run_adb(cmd_list, timeout=15):
+def run_adb(cmd_list, timeout=12):
     """Thực thi lệnh ADB an toàn và trả về output"""
     try:
         full_cmd = [ADB] + cmd_list
         res = subprocess.run(full_cmd, capture_output=True, text=True, timeout=timeout)
         return res.returncode == 0, res.stdout.strip(), res.stderr.strip()
     except subprocess.TimeoutExpired:
-        return False, "", "Timeout sau 15 giây"
+        return False, "", "Timeout sau 12 giây"
     except Exception as e:
         return False, "", str(e)
 
@@ -82,22 +105,18 @@ def get_device_info():
         "resolution": "1080x2400"
     }
     
-    # Model
     ok, out, _ = run_adb(["shell", "getprop", "ro.product.model"])
     if ok and out:
         info["model"] = out
         
-    # Android Version
     ok, out, _ = run_adb(["shell", "getprop", "ro.build.version.release"])
     if ok and out:
         info["android_version"] = out
         
-    # API Level
     ok, out, _ = run_adb(["shell", "getprop", "ro.build.version.sdk"])
     if ok and out:
         info["api_level"] = out
         
-    # Battery
     ok, out, _ = run_adb(["shell", "dumpsys", "battery"])
     if ok and out:
         level_m = re.search(r"level:\s*(\d+)", out)
@@ -107,7 +126,6 @@ def get_device_info():
         if status_m:
             info["charging"] = status_m.group(1) in ("2", "5")
             
-    # Current focused activity
     ok, out, _ = run_adb(["shell", "dumpsys", "activity", "activities"])
     if ok and out:
         act_m = re.search(r"mResumedActivity:\s*ActivityRecord\{[^\s]+\s+[^\s]+\s+([^\s]+)", out)
@@ -147,6 +165,7 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(content)))
+                self.send_header("Cache-Control", "no-cache")
                 self.end_headers()
                 self.wfile.write(content)
                 return
@@ -158,22 +177,39 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             info = get_device_info()
             self._send_json({"success": True, "device": info})
 
-        elif path == "/api/screenshot":
-            # Phục vụ khung hình tức thì từ bộ nhớ đệm
+        elif path in ("/api/screenshot", "/api/screen.jpg"):
+            query = urllib.parse.parse_qs(parsed.query)
+            want_hd = query.get("hd", ["0"])[0] in ("1", "true")
+            want_png = query.get("format", [""])[0] == "png"
+
             with FRAME_LOCK:
-                data = LATEST_FRAME
-            if data:
+                png_data = LATEST_PNG
+                jpeg_data = LATEST_JPEG
+
+            # Nếu yêu cầu ảnh HD hoặc chưa có JPEG, trả PNG gốc
+            if (want_hd or want_png or not jpeg_data) and png_data:
                 self.send_response(200)
                 self.send_header("Content-Type", "image/png")
-                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Content-Length", str(len(png_data)))
                 self.send_header("Access-Control-Allow-Origin", "*")
                 self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
                 self.end_headers()
-                self.wfile.write(data)
+                self.wfile.write(png_data)
+                return
+            elif jpeg_data:
+                # Trả JPEG siêu nhẹ (~30 KB) tức thì để web hiển thị 60fps mượt mà không chớp
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Content-Length", str(len(jpeg_data)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.end_headers()
+                self.wfile.write(jpeg_data)
                 return
             else:
+                # Fallback trực tiếp nếu cache rỗng
                 p = subprocess.Popen([ADB, "exec-out", "screencap", "-p"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                out, _ = p.communicate(timeout=8)
+                out, _ = p.communicate(timeout=6)
                 self.send_response(200)
                 self.send_header("Content-Type", "image/png")
                 self.send_header("Content-Length", str(len(out)))
@@ -183,7 +219,6 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
                 return
 
         elif path == "/api/stream.mjpg":
-            # Luồng phát video MJPEG trực tiếp
             self.send_response(200)
             self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -193,18 +228,19 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             while True:
                 with FRAME_LOCK:
                     cur_seq = FRAME_SEQ
-                    data = LATEST_FRAME
+                    data = LATEST_JPEG if LATEST_JPEG else LATEST_PNG
+                    mime = "image/jpeg" if LATEST_JPEG else "image/png"
                 if cur_seq != last_seq and data:
                     last_seq = cur_seq
                     try:
                         self.wfile.write(b"--frame\r\n")
-                        self.wfile.write(b"Content-Type: image/png\r\n")
+                        self.wfile.write(f"Content-Type: {mime}\r\n".encode())
                         self.wfile.write(f"Content-Length: {len(data)}\r\n\r\n".encode())
                         self.wfile.write(data)
                         self.wfile.write(b"\r\n")
                     except Exception:
                         break
-                time.sleep(0.06)
+                time.sleep(0.04)
             return
 
         elif path == "/api/launch":
@@ -303,7 +339,7 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             y1 = int(data.get("y1", 1800))
             x2 = int(data.get("x2", 540))
             y2 = int(data.get("y2", 600))
-            duration = int(data.get("duration", 300))
+            duration = int(data.get("duration", 250))
             ok, _, err = run_adb(["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration)])
             self._send_json({"success": ok, "swipe": [x1, y1, x2, y2, duration], "error": err if not ok else None})
 
@@ -312,7 +348,6 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
             if "multipart/form-data" in content_type:
                 boundary = content_type.split("boundary=")[-1].encode("utf-8")
                 raw_data = self.rfile.read(content_length)
-                
                 parts = raw_data.split(b"--" + boundary)
                 apk_content = None
                 filename = "uploaded_app.apk"
@@ -370,7 +405,7 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
 def main():
     server_address = ("0.0.0.0", PORT)
     httpd = HTTPServer(server_address, CloudPhoneAPIHandler)
-    print(f"🚀 [Pixel 10 Pro Gateway] API Server đang lắng nghe tại http://0.0.0.0:{PORT}", flush=True)
+    print(f"🚀 [Pixel 10 Pro Gateway] API Server đang lắng nghe tại http://0.0.0.0:{PORT} (HAS_PIL={HAS_PIL})", flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
