@@ -5,12 +5,13 @@ on:
   push:
     paths:
       - '.github/workflows/phase0-feasibility.yml'
+      - 'scripts/phase0-benchmark.sh'
 
 jobs:
   phase0-verification:
     name: 🧪 Pha 0 - Kiểm tra khả thi & Boot Emulator
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - name: 📥 Tải mã nguồn dự án
@@ -46,11 +47,14 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends \
             libpulse0 libnss3 libgl1 libegl1 libvulkan1 cpu-checker
+          chmod +x scripts/*.sh
           kvm-ok || true
 
       - name: 🔍 Kiểm tra danh sách thiết bị trong avdmanager
         run: |
           mkdir -p artifacts
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
           echo "=== Tra cứu danh sách thiết bị (avdmanager list device) ==="
           avdmanager list device > artifacts/avdmanager_devices.txt || true
           grep -E "id:|Name:" artifacts/avdmanager_devices.txt | head -25 || true
@@ -59,7 +63,7 @@ jobs:
           if grep -qi "Pixel 10" artifacts/avdmanager_devices.txt; then
             echo "Tìm thấy Pixel 10 trong SDK!"
           else
-            echo "Pixel 10 Pro chưa có sẵn trong SDK (dòng máy mới nhất SDK là Pixel 7 / 8). Sẽ dùng profile Pixel gần nhất và override theo thông số Pixel 10 Pro."
+            echo "Xác nhận: Pixel 10 Pro chưa có sẵn trong SDK (profile mới nhất của SDK hiện tại là Pixel 7 Pro / Pixel 8). Sẽ dùng profile pixel_7_pro cơ sở và tinh chỉnh thông số chuẩn Pixel 10 Pro."
           fi
 
       - name: 📱 Khởi chạy Emulator & Đo đạc thời gian Boot thực tế
@@ -75,62 +79,7 @@ jobs:
           emulator-boot-timeout: 600
           emulator-options: -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            mkdir -p artifacts
-            echo "=== Đo thời gian boot đến khi sys.boot_completed == 1 ==="
-            START_BOOT=$(date +%s)
-            
-            adb wait-for-device
-            while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
-              sleep 1
-            done
-            END_BOOT=$(date +%s)
-            BOOT_TIME=$((END_BOOT - START_BOOT))
-            
-            echo "============================================================"
-            echo "⏱️ THỜI GIAN BOOT THỰC TẾ TRÊN CI: ${BOOT_TIME} GIÂY"
-            echo "============================================================"
-            echo "Cold boot time: ${BOOT_TIME}s" > artifacts/boot_benchmark.txt
-            
-            # Mở khóa màn hình Keyguard
-            adb shell wm dismiss-keyguard || true
-            
-            # Cấu hình thông số Pixel 10 Pro (Màn hình 1080x2400, density 420 dpi)
-            adb shell wm size 1080x2400
-            adb shell wm density 420
-            
-            # Đợi Launcher ổn định
-            sleep 3
-            
-            # 1. Chụp ảnh màn hình chính Home Screen
-            adb exec-out screencap -p > artifacts/phase0_home_screen.png
-            echo "✅ Đã chụp màn hình Home Screen: $(ls -lh artifacts/phase0_home_screen.png | awk '{print $5}')"
-            
-            # 2. Mở ứng dụng Google Play Store (CH Play chính hãng)
-            echo "=== Mở Google Play Store ==="
-            adb shell monkey -p com.android.vending -c android.intent.category.LAUNCHER 1
-            sleep 6
-            
-            # Chụp ảnh màn hình Google Play Store
-            adb exec-out screencap -p > artifacts/phase0_playstore_screen.png
-            echo "✅ Đã chụp màn hình Google Play Store: $(ls -lh artifacts/phase0_playstore_screen.png | awk '{print $5}')"
-            
-            # 3. Thu thập thông số kỹ thuật thiết bị
-            cat << 'EOF' > artifacts/specs_and_environment.txt
-            === THÔNG SỐ RUNNER & MÁY ẢO GOOGLE PIXEL 10 PRO (PHASE 0) ===
-            Nguồn tham chiếu thông số: Google Pixel Flagship Series (6.3" Actua Display, 1080x2400 FHD+, 420 dpi, Tensor G5)
-            Target System Image: system-images;android-34;google_apis_playstore;x86_64
-            KVM Virtualization: Enabled (/dev/kvm mode 0666)
-            EOF
-            
-            echo "Android Release: $(adb shell getprop ro.build.version.release)" >> artifacts/specs_and_environment.txt
-            echo "API Level: $(adb shell getprop ro.build.version.sdk)" >> artifacts/specs_and_environment.txt
-            echo "Display Resolution: $(adb shell wm size)" >> artifacts/specs_and_environment.txt
-            echo "Display Density: $(adb shell wm density)" >> artifacts/specs_and_environment.txt
-            echo "CPU Host: $(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2)" >> artifacts/specs_and_environment.txt
-            echo "CPU Cores Allocated: 3 vCPUs" >> artifacts/specs_and_environment.txt
-            echo "Total System RAM: $(free -h | awk '/Mem:/ {print $2}')" >> artifacts/specs_and_environment.txt
-            echo "Emulator Cold Boot Duration: ${BOOT_TIME} seconds" >> artifacts/specs_and_environment.txt
+          script: bash scripts/phase0-benchmark.sh
 
       - name: 📤 Lưu Artifacts Pha 0 lên GitHub Actions
         uses: actions/upload-artifact@v4
