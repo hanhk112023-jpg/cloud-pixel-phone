@@ -1,0 +1,141 @@
+name: Phase 0 - Feasibility & Emulator Boot Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/phase0-feasibility.yml'
+
+jobs:
+  phase0-verification:
+    name: 🧪 Pha 0 - Kiểm tra khả thi & Boot Emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Tải mã nguồn dự án
+        uses: actions/checkout@v4
+
+      - name: 🔑 Kiểm tra và kích hoạt KVM Hardware Acceleration
+        run: |
+          echo "=== 1. Kiểm tra /dev/kvm trên GitHub Runner ==="
+          if [ ! -e /dev/kvm ]; then
+            echo "::error::Runner không tồn tại /dev/kvm!"
+            exit 1
+          fi
+          ls -la /dev/kvm
+          
+          echo "=== 2. Thiết lập udev rule mode 0666 cho /dev/kvm ==="
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+          sudo chmod 666 /dev/kvm
+          ls -la /dev/kvm
+          
+          python3 -c "import os; assert os.access('/dev/kvm', os.R_OK | os.W_OK), 'KVM không đọc ghi được'"
+          echo "✅ KVM Hardware Virtualization sẵn sàng và có quyền đọc/ghi!"
+
+      - name: ☕ Thiết lập Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 📦 Cài đặt thư viện đồ họa & cpu-checker
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            libpulse0 libnss3 libgl1 libegl1 libvulkan1 cpu-checker
+          kvm-ok || true
+
+      - name: 🔍 Kiểm tra danh sách thiết bị trong avdmanager
+        run: |
+          mkdir -p artifacts
+          echo "=== Tra cứu danh sách thiết bị (avdmanager list device) ==="
+          avdmanager list device > artifacts/avdmanager_devices.txt || true
+          grep -E "id:|Name:" artifacts/avdmanager_devices.txt | head -25 || true
+          
+          echo "Kiểm tra xem có Pixel 10 Pro không:"
+          if grep -qi "Pixel 10" artifacts/avdmanager_devices.txt; then
+            echo "Tìm thấy Pixel 10 trong SDK!"
+          else
+            echo "Pixel 10 Pro chưa có sẵn trong SDK (dòng máy mới nhất SDK là Pixel 7 / 8). Sẽ dùng profile Pixel gần nhất và override theo thông số Pixel 10 Pro."
+          fi
+
+      - name: 📱 Khởi chạy Emulator & Đo đạc thời gian Boot thực tế
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_7_pro
+          ram-size: 3072M
+          cores: 3
+          disk-size: 16G
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            mkdir -p artifacts
+            echo "=== Đo thời gian boot đến khi sys.boot_completed == 1 ==="
+            START_BOOT=$(date +%s)
+            
+            adb wait-for-device
+            while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+              sleep 1
+            done
+            END_BOOT=$(date +%s)
+            BOOT_TIME=$((END_BOOT - START_BOOT))
+            
+            echo "============================================================"
+            echo "⏱️ THỜI GIAN BOOT THỰC TẾ TRÊN CI: ${BOOT_TIME} GIÂY"
+            echo "============================================================"
+            echo "Cold boot time: ${BOOT_TIME}s" > artifacts/boot_benchmark.txt
+            
+            # Mở khóa màn hình Keyguard
+            adb shell wm dismiss-keyguard || true
+            
+            # Cấu hình thông số Pixel 10 Pro (Màn hình 1080x2400, density 420 dpi)
+            adb shell wm size 1080x2400
+            adb shell wm density 420
+            
+            # Đợi Launcher ổn định
+            sleep 3
+            
+            # 1. Chụp ảnh màn hình chính Home Screen
+            adb exec-out screencap -p > artifacts/phase0_home_screen.png
+            echo "✅ Đã chụp màn hình Home Screen: $(ls -lh artifacts/phase0_home_screen.png | awk '{print $5}')"
+            
+            # 2. Mở ứng dụng Google Play Store (CH Play chính hãng)
+            echo "=== Mở Google Play Store ==="
+            adb shell monkey -p com.android.vending -c android.intent.category.LAUNCHER 1
+            sleep 6
+            
+            # Chụp ảnh màn hình Google Play Store
+            adb exec-out screencap -p > artifacts/phase0_playstore_screen.png
+            echo "✅ Đã chụp màn hình Google Play Store: $(ls -lh artifacts/phase0_playstore_screen.png | awk '{print $5}')"
+            
+            # 3. Thu thập thông số kỹ thuật thiết bị
+            cat << 'EOF' > artifacts/specs_and_environment.txt
+            === THÔNG SỐ RUNNER & MÁY ẢO GOOGLE PIXEL 10 PRO (PHASE 0) ===
+            Nguồn tham chiếu thông số: Google Pixel Flagship Series (6.3" Actua Display, 1080x2400 FHD+, 420 dpi, Tensor G5)
+            Target System Image: system-images;android-34;google_apis_playstore;x86_64
+            KVM Virtualization: Enabled (/dev/kvm mode 0666)
+            EOF
+            
+            echo "Android Release: $(adb shell getprop ro.build.version.release)" >> artifacts/specs_and_environment.txt
+            echo "API Level: $(adb shell getprop ro.build.version.sdk)" >> artifacts/specs_and_environment.txt
+            echo "Display Resolution: $(adb shell wm size)" >> artifacts/specs_and_environment.txt
+            echo "Display Density: $(adb shell wm density)" >> artifacts/specs_and_environment.txt
+            echo "CPU Host: $(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2)" >> artifacts/specs_and_environment.txt
+            echo "CPU Cores Allocated: 3 vCPUs" >> artifacts/specs_and_environment.txt
+            echo "Total System RAM: $(free -h | awk '/Mem:/ {print $2}')" >> artifacts/specs_and_environment.txt
+            echo "Emulator Cold Boot Duration: ${BOOT_TIME} seconds" >> artifacts/specs_and_environment.txt
+
+      - name: 📤 Lưu Artifacts Pha 0 lên GitHub Actions
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase0-feasibility-artifacts
+          path: artifacts/
+          retention-days: 14
