@@ -18,6 +18,8 @@ adb shell wm dismiss-keyguard || true
 # Tinh chỉnh phần cứng chuẩn Pixel 10 Pro
 adb shell wm size 1080x2400 || true
 adb shell wm density 420 || true
+sleep 2
+adb shell input keyevent 3 || true
 
 # Đặt tên thiết bị và nhà sản xuất Google (bảo đảm an toàn không crash script)
 adb shell "setprop ro.product.model 'Pixel 10 Pro'" || true

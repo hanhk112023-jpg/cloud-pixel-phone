@@ -88,7 +88,7 @@ jobs:
       - name: 📱 Khởi chạy Google Pixel 10 Pro Cloud & Mở cổng Web
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ inputs.android_version }}
+          api-level: ${{ inputs.android_version || '34' }}
           target: google_apis_playstore
           arch: x86_64
           profile: pixel_7_pro
@@ -99,6 +99,6 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            bash scripts/setup-pixel-props.sh "${{ inputs.auto_install_apk }}"
+            bash scripts/setup-pixel-props.sh "${{ inputs.auto_install_apk || '' }}"
             bash scripts/tunnel.sh
-            bash scripts/keepalive.sh "${{ inputs.duration_minutes }}"
+            bash scripts/keepalive.sh "${{ inputs.duration_minutes || '300' }}"
