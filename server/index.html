@@ -75,21 +75,12 @@
       }
     }
 
-    /* SCRCPY LOW-LATENCY 60FPS IFRAME */
-    #scrcpyFrame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #000;
-      display: block;
-    }
-
-    /* CANVAS DISPLAY (FALLBACK) */
+    /* CANVAS DISPLAY - PRIMARY 1080x2400 HIGH SPEED TURBO DISPLAY */
     #screenCanvas {
       width: 100%;
       height: 100%;
       object-fit: fill;
-      display: none;
+      display: block;
       cursor: pointer;
       background: #000;
       touch-action: none;
@@ -134,7 +125,7 @@
       margin-left: -18px;
       margin-top: -18px;
       border-radius: 50%;
-      background: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.55);
       border: 2px solid #38BDF8;
       pointer-events: none;
       animation: rippleAnim 0.35s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
@@ -459,18 +450,14 @@
   <!-- AMBIENT GLOW -->
   <div class="ambient-glow"></div>
 
-  <!-- FIXED FULLSCREEN PHONE VIEWPORT -->
+  <!-- FIXED FULLSCREEN PHONE VIEWPORT (AUTHENTIC PIXEL 10 PRO) -->
   <div class="phone-viewport" id="viewport">
-    <!-- ENGINE 1: SCRCPY ULTRA-LOW LATENCY H.264 (SUB-50MS) -->
-    <iframe id="scrcpyFrame" src="/scrcpy/" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
-    
-    <!-- ENGINE 2: CANVAS TURBO JPEG STREAM (FALLBACK) -->
     <canvas id="screenCanvas" width="1080" height="2400"></canvas>
     
     <!-- TINY STATUS PILL -->
     <div class="status-pill">
       <span class="dot"></span>
-      <span id="pillFps">60 FPS · Scrcpy</span>
+      <span id="pillFps">Turbo JPEG · KVM</span>
     </div>
   </div>
 
@@ -492,27 +479,6 @@
         <span class="menu-badge">UG Style</span>
       </div>
       <button class="btn-close-menu" onclick="closeMenu()">✕</button>
-    </div>
-
-    <!-- ENGINE SELECTOR -->
-    <div>
-      <div class="menu-section-title">Chế Độ Điều Khiển (Độ Trễ)</div>
-      <div class="menu-grid" style="grid-template-columns: 1fr 1fr;">
-        <button class="menu-btn primary" id="btnModeScrcpy" onclick="switchEngine('scrcpy')">
-          <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
-          ⚡ Siêu Tốc (Scrcpy 60fps)
-        </button>
-        <button class="menu-btn" id="btnModeCanvas" onclick="switchEngine('canvas')">
-          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          📷 Canvas Turbo
-        </button>
-      </div>
-      <div style="margin-top: 8px;">
-        <a href="/scrcpy/" target="_blank" class="menu-btn" style="text-decoration: none; width: 100%; display: flex; flex-direction: row; gap: 8px; justify-content: center; padding: 10px; background: rgba(56, 189, 248, 0.15); border-color: var(--accent); color: #38BDF8;">
-          <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-          🚀 Mở Scrcpy Full Màn Hình Tab Mới
-        </a>
-      </div>
     </div>
 
     <!-- CORE NAVIGATION -->
@@ -582,6 +548,12 @@
           Nguồn
         </button>
       </div>
+      <div style="margin-top: 10px;">
+        <a href="/scrcpy/" target="_blank" class="menu-btn" style="text-decoration: none; width: 100%; display: flex; flex-direction: row; gap: 8px; justify-content: center; padding: 10px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;">
+          <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+          🚀 Mở Scrcpy Web (Tab Mới)
+        </a>
+      </div>
     </div>
   </div>
 
@@ -616,41 +588,14 @@
 
   <script>
     // =========================================================================
-    // DUAL ENGINE STREAMING CONTROLLER (SCRCPY 60FPS & CANVAS TURBO)
+    // CANVAS DOUBLE-BUFFER STREAMING (AUTHENTIC PIXEL 10 PRO ZERO-FLICKER)
     // =========================================================================
-    let currentEngine = 'scrcpy';
-    const iframe = document.getElementById('scrcpyFrame');
     const canvas = document.getElementById('screenCanvas');
     const ctx = canvas.getContext('2d');
     let isFetching = false;
     let frameCount = 0;
     let lastFpsTime = Date.now();
     let lastSavedTime = 0;
-
-    function switchEngine(engine) {
-      currentEngine = engine;
-      const btnScrcpy = document.getElementById('btnModeScrcpy');
-      const btnCanvas = document.getElementById('btnModeCanvas');
-      const pillFps = document.getElementById('pillFps');
-
-      if (engine === 'scrcpy') {
-        iframe.style.display = 'block';
-        canvas.style.display = 'none';
-        btnScrcpy.classList.add('primary');
-        btnCanvas.classList.remove('primary');
-        pillFps.textContent = '60 FPS · Scrcpy';
-        showToast('⚡ Chế độ Siêu Tốc Scrcpy (Sub-50ms)');
-      } else {
-        iframe.style.display = 'none';
-        canvas.style.display = 'block';
-        btnCanvas.classList.add('primary');
-        btnScrcpy.classList.remove('primary');
-        pillFps.textContent = 'Canvas Turbo';
-        showToast('📷 Chế độ Canvas Turbo (Tiết kiệm băng thông)');
-        fetchNextFrame();
-      }
-      closeMenu();
-    }
 
     // 0ms RELOAD CACHE: Hiển thị ngay frame trước đó từ sessionStorage khi vừa load trang
     const cachedData = sessionStorage.getItem('pixel_last_screen');
@@ -662,16 +607,16 @@
 
     // Tải khung hình liên tục bằng kỹ thuật double-buffering không nghẽn
     function fetchNextFrame() {
-      if (currentEngine !== 'canvas' || isFetching) return;
+      if (isFetching) return;
       isFetching = true;
 
       const img = new Image();
       let finished = false;
 
-      // Hủy cờ fetching sau 350ms nếu mạng chậm để không bao giờ bị nghẽn chu kỳ
+      // Hủy cờ fetching sau 300ms nếu mạng chậm để không bao giờ bị nghẽn chu kỳ
       const watchdog = setTimeout(() => {
         if (!finished) isFetching = false;
-      }, 350);
+      }, 300);
 
       img.onload = () => {
         finished = true;
@@ -700,12 +645,13 @@
         clearTimeout(watchdog);
         isFetching = false;
       };
+      // Gọi ảnh JPEG siêu nhẹ (~40 KB)
       img.src = '/api/screenshot?t=' + Date.now();
     }
 
-    setInterval(() => {
-      if (currentEngine === 'canvas') fetchNextFrame();
-    }, 120);
+    // Vòng lặp tải khung hình tốc độ cao (mỗi 100ms)
+    setInterval(fetchNextFrame, 100);
+    fetchNextFrame();
 
     // =========================================================================
     // CANVAS TOUCH & GESTURE (NON-BLOCKING FIRE-AND-FORGET)
@@ -753,10 +699,11 @@
         }).catch(() => {});
       }
 
-      // Kích hoạt ngay lập tức 2 frame phản hồi
+      // Kích hoạt ngay lập tức chu kỳ cập nhật khung hình phản hồi
       isFetching = false;
-      setTimeout(fetchNextFrame, 70);
-      setTimeout(fetchNextFrame, 220);
+      setTimeout(fetchNextFrame, 60);
+      setTimeout(fetchNextFrame, 180);
+      setTimeout(fetchNextFrame, 350);
     });
 
     function showTouchFeedback(x, y) {
@@ -862,20 +809,16 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: keyName })
       }).catch(() => {});
-      if (currentEngine === 'canvas') {
-        setTimeout(fetchNextFrame, 120);
-        setTimeout(fetchNextFrame, 350);
-      }
+      setTimeout(() => { isFetching = false; fetchNextFrame(); }, 80);
+      setTimeout(() => { isFetching = false; fetchNextFrame(); }, 250);
     }
 
     async function execLaunch(appName) {
       closeMenu();
       showToast(`Đang mở ${appName.toUpperCase()}...`);
       fetch(`/api/launch?app=${appName}`).catch(() => {});
-      if (currentEngine === 'canvas') {
-        setTimeout(fetchNextFrame, 200);
-        setTimeout(fetchNextFrame, 600);
-      }
+      setTimeout(() => { isFetching = false; fetchNextFrame(); }, 150);
+      setTimeout(() => { isFetching = false; fetchNextFrame(); }, 500);
     }
 
     // TEXT MODAL
@@ -898,6 +841,7 @@
         body: JSON.stringify({ text: text })
       }).catch(() => {});
       input.value = '';
+      setTimeout(() => { isFetching = false; fetchNextFrame(); }, 150);
     }
 
     // APK MODAL
@@ -928,6 +872,7 @@
       } catch (err) {
         showToast(`Lỗi kết nối: ${err.message}`);
       }
+      setTimeout(() => { isFetching = false; fetchNextFrame(); }, 500);
     }
 
     function closeDialog(id) {
