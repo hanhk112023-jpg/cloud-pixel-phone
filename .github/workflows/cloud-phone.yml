@@ -1,0 +1,107 @@
+name: Cloud Pixel 10 Pro
+
+on:
+  workflow_dispatch:
+    inputs:
+      android_version:
+        description: 'Phiên bản Android'
+        required: true
+        default: '34'
+        type: choice
+        options:
+          - '34' # Android 14.0 (Khuyên dùng - Ổn định nhất)
+          - '33' # Android 13.0
+          - '31' # Android 12.0
+      device_model:
+        description: 'Tên dòng máy Pixel'
+        required: true
+        default: 'Google Pixel 10 Pro'
+        type: choice
+        options:
+          - 'Google Pixel 10 Pro'
+          - 'Google Pixel 9 Pro'
+          - 'Google Pixel 8 Pro'
+      duration_minutes:
+        description: 'Thời gian duy trì máy (Phút, tối đa 350)'
+        required: true
+        default: '300'
+      auto_install_apk:
+        description: 'Tự động cài đặt APK (Tùy chọn: Nhập link trực tiếp tải file .apk)'
+        required: false
+        default: ''
+
+concurrency:
+  group: cloud-pixel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  launch-phone:
+    name: 📱 Chạy Google Pixel 10 Pro Cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions: write-all
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+    steps:
+      - name: 📥 Tải mã nguồn dự án
+        uses: actions/checkout@v4
+
+      - name: 🔑 Kích hoạt KVM Hardware Acceleration
+        run: |
+          if [ ! -e /dev/kvm ]; then
+            echo "::error::Runner không hỗ trợ KVM phần cứng!"
+            exit 1
+          fi
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+          ls -l /dev/kvm
+          echo "✅ KVM Hardware Virtualization sẵn sàng!"
+
+      - name: ☕ Thiết lập Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 📦 Cài đặt Nginx, Cloudflared & QEMU Runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            nginx \
+            curl \
+            unzip \
+            libpulse0 \
+            libnss3 \
+            libgl1 \
+            libegl1 \
+            libvulkan1 \
+            ffmpeg \
+            python3-pip \
+            python3-pil
+          sudo curl -fsSL -o /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          sudo chmod +x /usr/local/bin/cloudflared
+          chmod +x scripts/*.sh server/*.py
+          echo "✅ Đã chuẩn bị toàn bộ công cụ máy chủ!"
+
+      - name: 📱 Khởi chạy Google Pixel 10 Pro Cloud & Mở cổng Web
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ inputs.android_version || '34' }}
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_7_pro
+          ram-size: 3072M
+          cores: 3
+          disk-size: 16G
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            bash scripts/setup-pixel-props.sh "${{ inputs.auto_install_apk || '' }}"
+            bash scripts/tunnel.sh
+            bash scripts/keepalive.sh "${{ inputs.duration_minutes || '300' }}"
