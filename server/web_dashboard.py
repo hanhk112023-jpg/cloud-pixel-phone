@@ -28,6 +28,17 @@ import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 
+# Mở rộng sys.path để nhận diện thư viện hệ thống (python3-pil cài qua apt)
+for dist_path in [
+    "/usr/lib/python3/dist-packages",
+    "/usr/local/lib/python3/dist-packages",
+    "/usr/lib/python3.12/dist-packages",
+    "/usr/lib/python3.11/dist-packages",
+    "/usr/lib/python3.10/dist-packages"
+]:
+    if os.path.isdir(dist_path) and dist_path not in sys.path:
+        sys.path.append(dist_path)
+
 # Kiểm tra thư viện nén ảnh PIL (Pillow)
 try:
     from PIL import Image
@@ -44,6 +55,32 @@ LATEST_JPEG = None
 FRAME_LOCK = threading.Lock()
 FRAME_SEQ = 0
 
+def convert_png_to_jpeg(png_bytes):
+    """Nén ảnh PNG sang JPEG 720x1600 siêu nhẹ (~30 KB) bằng PIL hoặc FFmpeg"""
+    global HAS_PIL
+    if HAS_PIL:
+        try:
+            img = Image.open(io.BytesIO(png_bytes))
+            img_res = img.resize((720, 1600), Image.Resampling.BILINEAR)
+            buf = io.BytesIO()
+            img_res.save(buf, format="JPEG", quality=75, optimize=True)
+            return buf.getvalue()
+        except Exception:
+            pass
+
+    # Fallback qua FFmpeg nếu PIL gặp sự cố
+    try:
+        p = subprocess.Popen(
+            ["ffmpeg", "-v", "error", "-i", "pipe:0", "-vf", "scale=720:1600", "-q:v", "4", "-f", "image2", "pipe:1"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        jpeg_out, _ = p.communicate(input=png_bytes, timeout=1.5)
+        if p.returncode == 0 and len(jpeg_out) > 1000:
+            return jpeg_out
+    except Exception:
+        pass
+    return None
+
 def capture_worker():
     """Luồng ngầm liên tục chụp màn hình và nén JPEG tức thì để web tải mượt mà không chớp"""
     global LATEST_PNG, LATEST_JPEG, FRAME_SEQ
@@ -52,17 +89,7 @@ def capture_worker():
             p = subprocess.Popen([ADB, "exec-out", "screencap", "-p"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, _ = p.communicate(timeout=3)
             if p.returncode == 0 and len(out) > 5000:
-                jpeg_bytes = None
-                if HAS_PIL:
-                    try:
-                        img = Image.open(io.BytesIO(out))
-                        # Giảm nhẹ độ phân giải xuống 720x1600 để tối ưu tốc độ truyền qua web (chỉ 25-35 KB)
-                        img_res = img.resize((720, 1600), Image.Resampling.BILINEAR)
-                        buf = io.BytesIO()
-                        img_res.save(buf, format="JPEG", quality=75, optimize=True)
-                        jpeg_bytes = buf.getvalue()
-                    except Exception:
-                        jpeg_bytes = None
+                jpeg_bytes = convert_png_to_jpeg(out)
 
                 with FRAME_LOCK:
                     LATEST_PNG = out
@@ -135,6 +162,11 @@ def get_device_info():
     return info
 
 class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
     def _send_json(self, data, status_code=200):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status_code)

@@ -589,6 +589,16 @@
     let isFetching = false;
     let frameCount = 0;
     let lastFpsTime = Date.now();
+    let lastSavedTime = 0;
+
+    // 0ms RELOAD CACHE: Hiển thị ngay frame trước đó từ sessionStorage khi vừa load trang
+    // Triệt tiêu 100% cảm giác "như làm mới máy" khi tải lại trang web
+    const cachedData = sessionStorage.getItem('pixel_last_screen');
+    if (cachedData) {
+      const initImg = new Image();
+      initImg.onload = () => ctx.drawImage(initImg, 0, 0, canvas.width, canvas.height);
+      initImg.src = cachedData;
+    }
 
     // Tải khung hình liên tục bằng kỹ thuật double-buffering
     function fetchNextFrame() {
@@ -597,12 +607,20 @@
 
       const img = new Image();
       img.onload = () => {
-        // Chỉ vẽ khi toàn bộ ảnh đã nạp xong vào bộ nhớ -> Triệt tiêu 100% hiện tượng chớp/đen màn hình
+        // Chỉ vẽ khi toàn bộ ảnh đã nạp xong vào bộ nhớ -> Không bao giờ chớp đen
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         isFetching = false;
 
-        frameCount++;
+        // Lưu frame định kỳ vào sessionStorage để F5/Reload hiển thị ngay tức thì
         const now = Date.now();
+        if (now - lastSavedTime > 1500) {
+          try {
+            sessionStorage.setItem('pixel_last_screen', canvas.toDataURL('image/jpeg', 0.5));
+            lastSavedTime = now;
+          } catch(e) {}
+        }
+
+        frameCount++;
         if (now - lastFpsTime >= 2000) {
           const fps = Math.round((frameCount * 1000) / (now - lastFpsTime));
           document.getElementById('pillFps').textContent = `${fps} FPS · KVM`;
@@ -717,6 +735,19 @@
       isBubbleDragging = false;
       if (!bubbleMoved) {
         toggleMenu();
+      } else {
+        // Hút nam châm thông minh vào cạnh trái hoặc phải màn hình giống AssistiveTouch / UGPhone
+        const curLeft = parseFloat(bubble.style.left) || 0;
+        const screenW = window.innerWidth;
+        bubble.style.transition = 'left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+        if (curLeft < screenW / 2) {
+          bubble.style.left = '16px';
+        } else {
+          bubble.style.left = `${screenW - 48 - 16}px`;
+        }
+        setTimeout(() => {
+          bubble.style.transition = 'transform 0.15s, opacity 0.2s';
+        }, 260);
       }
     });
 

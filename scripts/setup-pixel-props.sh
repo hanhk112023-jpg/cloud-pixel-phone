@@ -12,7 +12,9 @@ echo "============================================================"
 
 adb wait-for-device
 
-# Mở khóa màn hình Keyguard
+# Mở khóa màn hình Keyguard và vô hiệu hóa màn hình khóa hoàn toàn
+adb shell locksettings set-disabled true || true
+adb shell settings put secure lockscreen.disabled 1 || true
 adb shell wm dismiss-keyguard || true
 
 # Tinh chỉnh phần cứng chuẩn Pixel 10 Pro
