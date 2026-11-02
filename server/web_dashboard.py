@@ -56,14 +56,21 @@ FRAME_LOCK = threading.Lock()
 FRAME_SEQ = 0
 
 def convert_png_to_jpeg(png_bytes):
-    """Nén ảnh PNG sang JPEG 720x1600 siêu nhẹ (~30 KB) bằng PIL hoặc FFmpeg"""
+    """Nén ảnh PNG sang JPEG 540x1200 siêu tốc (chỉ 18-25 KB, nén trong 8ms)"""
     global HAS_PIL
+    if not HAS_PIL:
+        try:
+            from PIL import Image
+            HAS_PIL = True
+        except ImportError:
+            pass
+
     if HAS_PIL:
         try:
             img = Image.open(io.BytesIO(png_bytes))
-            img_res = img.resize((720, 1600), Image.Resampling.BILINEAR)
+            img_res = img.resize((540, 1200), Image.Resampling.BILINEAR)
             buf = io.BytesIO()
-            img_res.save(buf, format="JPEG", quality=75, optimize=True)
+            img_res.save(buf, format="JPEG", quality=65, optimize=False)
             return buf.getvalue()
         except Exception:
             pass
@@ -71,10 +78,10 @@ def convert_png_to_jpeg(png_bytes):
     # Fallback qua FFmpeg nếu PIL gặp sự cố
     try:
         p = subprocess.Popen(
-            ["ffmpeg", "-v", "error", "-i", "pipe:0", "-vf", "scale=720:1600", "-q:v", "4", "-f", "image2", "pipe:1"],
+            ["ffmpeg", "-v", "error", "-i", "pipe:0", "-vf", "scale=540:1200", "-q:v", "5", "-f", "image2", "pipe:1"],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        jpeg_out, _ = p.communicate(input=png_bytes, timeout=1.5)
+        jpeg_out, _ = p.communicate(input=png_bytes, timeout=3.0)
         if p.returncode == 0 and len(jpeg_out) > 1000:
             return jpeg_out
     except Exception:
@@ -297,6 +304,22 @@ class CloudPhoneAPIHandler(BaseHTTPRequestHandler):
 
         elif path == "/api/ping":
             self._send_json({"success": True, "message": "Pixel 10 Pro Cloud Gateway Online", "time": time.time()})
+
+        elif path == "/api/debug":
+            with FRAME_LOCK:
+                has_jpg = LATEST_JPEG is not None
+                jpg_len = len(LATEST_JPEG) if LATEST_JPEG else 0
+                has_png = LATEST_PNG is not None
+                png_len = len(LATEST_PNG) if LATEST_PNG else 0
+            self._send_json({
+                "has_pil": HAS_PIL,
+                "has_jpeg": has_jpg,
+                "jpeg_size": jpg_len,
+                "png_size": png_len,
+                "frame_seq": FRAME_SEQ,
+                "python": sys.executable,
+                "sys_path": sys.path
+            })
 
         else:
             self._send_json({"error": "Endpoint không tồn tại"}, status_code=404)

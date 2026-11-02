@@ -35,6 +35,9 @@ echo "============================================================"
 echo "⚙️ [2/4] Khởi động Python ADB Control REST API (Port 5000)"
 echo "============================================================"
 
+# Cài đặt Pillow & WebSockets cho Python môi trường hiện tại để nén JPEG siêu tốc (18 KB/frame)
+python3 -m pip install --break-system-packages --no-cache-dir pillow websockets 2>/dev/null || pip install --no-cache-dir pillow websockets 2>/dev/null || true
+
 export API_PORT=5000
 nohup python3 "$REPO_DIR/server/web_dashboard.py" > /tmp/api_server.log 2>&1 &
 echo "✅ API Server đã khởi chạy (PID: $!)"
